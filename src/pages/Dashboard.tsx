@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { createProject } from "../api/backend";
 import IncidentsList from "../components/IncidentsList";
-import "../styles/dashboard.css";
+import "../styles/dashboard.css"
 
 export default function Dashboard({ 
   session: initialSession,
@@ -67,12 +67,11 @@ export default function Dashboard({
   return (
     <div className="dashboard-container">
       {/* Header */}
-      <header className="dashboard-header">
+      <header className="">
         <div className="dashboard-header-content">
-          <div 
-            className="dashboard-logo"
+          <div
+            className="dashboard-logo cursor-pointer"
             onClick={onNavigateHome}
-            style={{ cursor: "pointer" }}
           >
             <span className="dashboard-logo-icon">⚡</span>
             <span className="dashboard-logo-text">AI Ops</span>
@@ -95,21 +94,16 @@ export default function Dashboard({
       {/* Main Content */}
       <div className="dashboard-content">
         {/* Create Project Section */}
-        <div style={{ marginBottom: "3rem" }}>
+        <div className="mb-12">
           <div className="section-header">
             <h1 className="section-title">Create Project</h1>
           </div>
 
           {error && <div className="error-message">{error}</div>}
 
-          <div style={{ 
-            display: "flex", 
-            gap: "1rem",
-            alignItems: "flex-end",
-            marginBottom: "2rem"
-          }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: "block", marginBottom: "0.5rem", color: "#cbd5e1", fontWeight: "600" }}>
+          <div className="mb-8 flex items-end gap-4">
+            <div className="flex-1">
+              <label className="mb-2 block font-semibold text-slate-300">
                 Project Name
               </label>
               <input
@@ -118,25 +112,7 @@ export default function Dashboard({
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && handleCreateProject()}
-                style={{
-                  width: "100%",
-                  padding: "0.75rem 1rem",
-                  background: "rgba(51, 65, 85, 0.5)",
-                  border: "1px solid rgba(148, 163, 184, 0.2)",
-                  borderRadius: "8px",
-                  color: "#e2e8f0",
-                  fontSize: "1rem",
-                  fontFamily: "inherit",
-                  boxSizing: "border-box",
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.background = "rgba(51, 65, 85, 0.7)";
-                  e.currentTarget.style.borderColor = "#3b82f6";
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.background = "rgba(51, 65, 85, 0.5)";
-                  e.currentTarget.style.borderColor = "rgba(148, 163, 184, 0.2)";
-                }}
+                className="w-full rounded-lg border border-slate-400/20 bg-slate-700/50 px-4 py-3 font-[inherit] text-base text-slate-200 transition-colors focus:border-blue-500 focus:bg-slate-700/70 focus:outline-none"
               />
             </div>
             <button 
@@ -157,36 +133,18 @@ export default function Dashboard({
                   <span className="card-label">Project Name</span>
                   <span className="card-value">{project.name}</span>
                 </div>
-                <div style={{ marginTop: "1rem" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                <div className="mt-4">
+                  <div className="mb-2 flex items-center justify-between">
                     <span className="card-label">API Key</span>
                     <button
                       onClick={handleCopyApiKey}
-                      style={{
-                        padding: "0.35rem 0.75rem",
-                        background: "rgba(59, 130, 246, 0.1)",
-                        border: "1px solid rgba(59, 130, 246, 0.2)",
-                        color: "#60a5fa",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                        fontSize: "0.8rem",
-                        fontWeight: "600",
-                        transition: "all 0.2s ease",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "rgba(59, 130, 246, 0.15)";
-                        e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.3)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "rgba(59, 130, 246, 0.1)";
-                        e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.2)";
-                      }}
+                      className="cursor-pointer rounded border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-[0.8rem] font-semibold text-blue-400 transition-all hover:border-blue-500/30 hover:bg-blue-500/15"
                     >
                       {copyFeedback ? "✓ Copied" : "Copy"}
                     </button>
                   </div>
                   <div className="api-key-display">{project.api_key}</div>
-                  <p style={{ fontSize: "0.85rem", color: "#94a3b8", margin: "0.5rem 0 0" }}>
+                  <p className="mt-2 mb-0 text-[0.85rem] text-slate-400">
                     Keep this key secret and secure. Use it to send incidents to AI Ops.
                   </p>
                 </div>

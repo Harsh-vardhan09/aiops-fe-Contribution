@@ -19,33 +19,15 @@ export default function ProjectCard({ name, apiKey }: Props) {
   };
 
   return (
-    <div className="card" style={{ marginBottom: 24 }}>
-      <h3 style={{ marginTop: 0 }}>{name}</h3>
+    <div className="card mb-6">
+      <h3 className="mt-0">{name}</h3>
 
-      <p style={{ color: "var(--muted)", fontSize: 14 }}>
+      <p className="text-muted-foreground text-sm">
         API Key (keep this secret)
       </p>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          marginTop: 12,
-        }}
-      >
-        <pre
-          style={{
-            flex: 1,
-            background: "#020617",
-            padding: 12,
-            borderRadius: 8,
-            overflowX: "auto",
-            fontSize: 13,
-            color: "var(--success)",
-            margin: 0,
-          }}
-        >
+      <div className="mt-3 flex items-center gap-3">
+        <pre className="m-0 flex-1 overflow-x-auto rounded-lg bg-slate-950 p-3 text-[13px] text-green-400">
           {apiKey}
         </pre>
 

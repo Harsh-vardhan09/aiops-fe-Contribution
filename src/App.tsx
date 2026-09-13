@@ -63,14 +63,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-        color: "#e2e8f0"
-      }}>
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 text-slate-200">
         <p>Loading...</p>
       </div>
     );

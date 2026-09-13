@@ -1,7 +1,7 @@
 export default function IncidentAnalysis({ data }: { data: any }) {
   if (!data || !data.analysis) {
     return (
-      <div style={{ marginTop: 30, color: "red" }}>
+      <div className="mt-8 text-red-500">
         <h4>AI Analysis</h4>
         <p>Error: Failed to analyze incident</p>
       </div>
@@ -11,7 +11,7 @@ export default function IncidentAnalysis({ data }: { data: any }) {
   const { analysis, decision } = data;
 
   return (
-    <div style={{ marginTop: 30 }}>
+    <div className="mt-8">
       <h4>AI Analysis</h4>
 
       <p><b>Root Cause:</b> {analysis.root_cause || "N/A"}</p>
