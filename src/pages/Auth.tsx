@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
+<<<<<<< Updated upstream
 import "../styles/auth.css";
+import Logo from "../components/Logo";
+=======
+import Logo from "../components/Logo";
+>>>>>>> Stashed changes
 
 export default function Auth({ 
   onNavigateHome,
@@ -50,81 +55,97 @@ export default function Auth({
     }
   };
 
+  const field =
+    "w-full rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-sm transition-colors placeholder:text-white/30 focus:border-green-400/50 focus:bg-white/10 focus:outline-none";
+
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-header">
-          <div 
-            className="auth-logo"
-            onClick={onNavigateHome}
-            style={{ cursor: "pointer" }}
-          >
-            <span className="auth-logo-icon">⚡</span>
-            <span className="auth-logo-text">AI Ops</span>
-          </div>
-          <h2 className="auth-title">{isSignUp ? "Create Account" : "Welcome Back"}</h2>
-          <p className="auth-subtitle">
-            {isSignUp 
-              ? "Sign up to start managing incidents intelligently" 
-              : "Login to your AI Ops account"}
-          </p>
-        </div>
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black px-5 py-12">
+      {/* ambient green glow */}
+      <div className="pointer-events-none absolute left-1/2 top-1/2 h-[38rem] w-[38rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-green-400/10 blur-[120px]" />
+
+      <div className="relative w-full max-w-md rounded-2xl border border-white/15 bg-white/[0.04] p-8 backdrop-blur-xl sm:p-10">
+        <button
+          type="button"
+          onClick={onNavigateHome}
+          className="flex items-center gap-2 text-white"
+        >
+          <Logo className="h-6 w-6 text-green-400" />
+          <span className="text-lg font-semibold tracking-tight">AI Ops</span>
+        </button>
+
+        <h2 className="mt-8 font-mono text-2xl font-bold uppercase leading-tight tracking-tight text-white">
+          {isSignUp ? "Create account" : "Welcome back"}
+        </h2>
+        <p className="mt-3 text-sm leading-relaxed text-white/50">
+          {isSignUp 
+            ? "Sign up to start managing incidents intelligently" 
+            : "Login to your AI Ops account"}
+        </p>
 
         {message && (
-          <div className={`message message-${message.type}`}>
+          <div
+            className={`mt-6 rounded-lg border px-4 py-3 text-sm ${
+              message.type === "error"
+                ? "border-red-400/25 bg-red-400/10 text-red-300"
+                : "border-green-400/25 bg-green-400/10 text-green-300"
+            }`}
+          >
             {message.text}
           </div>
         )}
 
-        <form className="auth-form" onSubmit={isSignUp ? handleSignUp : handleSignIn}>
-          <div className="form-group">
-            <label>Email Address</label>
+        <form className="mt-8 space-y-5" onSubmit={isSignUp ? handleSignUp : handleSignIn}>
+          <div>
+            <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.15em] text-white/50">
+              Email Address
+            </label>
             <input
               type="email"
               placeholder="you@example.com"
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
+              className={field}
             />
           </div>
 
-          <div className="form-group">
-            <label>Password</label>
+          <div>
+            <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.15em] text-white/50">
+              Password
+            </label>
             <input
               type="password"
               placeholder="••••••••"
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
+              className={field}
             />
           </div>
 
-          <div className="auth-buttons">
-            <button 
-              type="submit"
-              className="auth-btn auth-btn-primary"
-              disabled={loading}
-            >
-              {loading ? "Loading..." : (isSignUp ? "Create Account" : "Login")}
-            </button>
-          </div>
+          <button 
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-lg bg-green-400 px-6 py-3 font-mono text-sm font-medium uppercase tracking-wide text-black transition-colors hover:bg-green-300 disabled:opacity-50"
+          >
+            {loading ? "Loading..." : (isSignUp ? "Create Account" : "Login")}
+          </button>
         </form>
 
-        <div className="auth-toggle">
-          <span className="auth-toggle-text">
-            {isSignUp ? "Already have an account? " : "Don't have an account? "}
-            <span 
-              className="auth-toggle-link"
-              onClick={() => {
-                setIsSignUp(!isSignUp);
-                setMessage(null);
-              }}
-            >
-              {isSignUp ? "Login" : "Sign Up"}
-            </span>
-          </span>
-        </div>
+        <p className="mt-8 text-center text-sm text-white/40">
+          {isSignUp ? "Already have an account? " : "Don't have an account? "}
+          <button
+            type="button"
+            className="font-medium text-green-400 transition-colors hover:text-green-300"
+            onClick={() => {
+              setIsSignUp(!isSignUp);
+              setMessage(null);
+            }}
+          >
+            {isSignUp ? "Login" : "Sign Up"}
+          </button>
+        </p>
       </div>
-    </div>
+    </main>
   );
 }

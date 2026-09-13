@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
+import Logo from "../components/Logo";
 import { createProject } from "../api/backend";
 import IncidentsList from "../components/IncidentsList";
 import "../styles/dashboard.css";
@@ -74,7 +75,7 @@ export default function Dashboard({
             onClick={onNavigateHome}
             style={{ cursor: "pointer" }}
           >
-            <span className="dashboard-logo-icon">⚡</span>
+            <Logo className="h-6 w-6 text-green-400" />
             <span className="dashboard-logo-text">AI Ops</span>
           </div>
           <div className="dashboard-user-info">
