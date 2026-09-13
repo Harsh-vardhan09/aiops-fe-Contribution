@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
-import "../styles/auth.css";
+import "../styles/auth.css"
 
 export default function Auth({ 
   onNavigateHome,
@@ -54,10 +54,9 @@ export default function Auth({
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <div 
-            className="auth-logo"
+          <div
+            className="auth-logo cursor-pointer"
             onClick={onNavigateHome}
-            style={{ cursor: "pointer" }}
           >
             <span className="auth-logo-icon">⚡</span>
             <span className="auth-logo-text">AI Ops</span>

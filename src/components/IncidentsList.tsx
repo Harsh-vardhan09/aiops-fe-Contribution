@@ -150,11 +150,11 @@ export default function IncidentsList() {
                     </div>
 
                     {analysis.suggested_fixes?.length > 0 && (
-                      <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid rgba(148, 163, 184, 0.2)" }}>
+                      <div className="mt-4 border-t border-slate-400/20 pt-4">
                         <span className="analysis-label">💡 Suggested Fixes:</span>
-                        <ul style={{ marginTop: "0.5rem", marginBottom: 0, paddingLeft: "1.5rem" }}>
+                        <ul className="mt-2 mb-0 pl-6">
                           {analysis.suggested_fixes.map((fix, idx) => (
-                            <li key={idx} style={{ color: "#cbd5e1", marginBottom: "0.5rem" }}>
+                            <li key={idx} className="mb-2 text-slate-300">
                               {fix}
                             </li>
                           ))}
