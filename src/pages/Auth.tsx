@@ -1,11 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
-<<<<<<< Updated upstream
-import "../styles/auth.css";
 import Logo from "../components/Logo";
-=======
-import Logo from "../components/Logo";
->>>>>>> Stashed changes
 
 export default function Auth({ 
   onNavigateHome,

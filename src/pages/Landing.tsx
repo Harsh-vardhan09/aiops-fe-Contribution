@@ -1,169 +1,155 @@
-import { useState } from "react";
-import { supabase } from "../lib/supabase";
-import "../styles/landing.css";
+import LightPillar from "@/components/LightPillar";
+import Navbar from "../components/Navbar";
 
-export default function Landing({ 
-  session, 
-  onAuthClick, 
-  onDashboardClick 
-}: { 
+const features = [
+  {
+    icon: "\u{1F680}",
+    title: "Fast Incident Detection",
+    body: "Detect anomalies and incidents instantly with advanced AI algorithms",
+  },
+  {
+    icon: "\u{1F9E0}",
+    title: "Intelligent Analysis",
+    body: "Get AI-powered root cause analysis and insights for every incident",
+  },
+  {
+    icon: "⏱️",
+    title: "Reduce MTTR",
+    body: "Slash your mean time to resolution with automated recommendations",
+  },
+  {
+    icon: "\u{1F512}",
+    title: "Enterprise Security",
+    body: "Bank-grade security with encrypted data and compliance certifications",
+  },
+  {
+    icon: "\u{1F4C8}",
+    title: "Scalable Infrastructure",
+    body: "Handle millions of events with our distributed, scalable platform",
+  },
+  {
+    icon: "\u{1F517}",
+    title: "Easy Integration",
+    body: "Integrate with your existing tools and workflows in minutes",
+  },
+];
+
+export default function Landing({
+  session,
+  onAuthClick,
+  onDashboardClick,
+}: {
   session: any;
   onAuthClick: (mode: "login" | "signup") => void;
   onDashboardClick: () => void;
 }) {
-  const [isLogoutLoading, setIsLogoutLoading] = useState(false);
-
-  const handleLogout = async () => {
-    setIsLogoutLoading(true);
-    try {
-      await supabase.auth.signOut();
-    } finally {
-      setIsLogoutLoading(false);
-    }
-  };
-
   return (
-    <div className="landing-container">
-      {/* Navigation Header */}
-      <nav className="landing-nav">
-        <div className="nav-content">
-          <div 
-            className="logo"
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            style={{ cursor: "pointer" }}
-          >
-            <span className="logo-icon">⚡</span>
-            <span className="logo-text">AI Ops</span>
-          </div>
-          <div className="nav-buttons">
-            {session ? (
-              <>
-                <span className="nav-user-email">{session.user?.email}</span>
-                <button 
-                  className="nav-btn signup-btn"
-                  onClick={onDashboardClick}
-                >
-                  Dashboard
-                </button>
-                <button 
-                  className="nav-btn login-btn"
-                  onClick={handleLogout}
-                  disabled={isLogoutLoading}
-                >
-                  {isLogoutLoading ? "Logging out..." : "Logout"}
-                </button>
-              </>
-            ) : (
-              <>
-                <button 
-                  className="nav-btn login-btn"
-                  onClick={() => onAuthClick("login")}
-                >
-                  Login
-                </button>
-                <button 
-                  className="nav-btn signup-btn"
-                  onClick={() => onAuthClick("signup")}
-                >
-                  Sign Up
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </nav>
+    <main className="min-h-screen bg-black">
+      <Navbar
+        session={session}
+        onAuthClick={onAuthClick}
+        onDashboardClick={onDashboardClick}
+      />
 
-      {/* Hero Section */}
-      <section className="hero">
-        <div className="hero-content">
-          <h1 className="hero-title">
-            Intelligent Operations <span className="highlight">Management</span>
+      <section className="relative top-10 border border-white/25 flex items-center p-3 lg:mx-5 min-h-120">
+        <div className="max-w-5xl">
+          <span className="inline-flex items-center gap-2 rounded-lg bg-green-400/15 py-2 px-3 text-xs text-green-300 ring-1 ring-green-400/25">
+            The NO.1 AI-driven platform for intelligent operations
+          </span>
+
+          <h1 className="mt-2 max-w-2xl font-mono text-2xl font-bold uppercase leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">
+            Comprehensive AI Ops solutions designed for every digital business
           </h1>
-          <p className="hero-subtitle">
-            Harness the power of AI to detect, analyze, and resolve incidents in real-time. 
-            Reduce mean time to resolution and keep your systems running smoothly.
+
+          <p className="mt-6 max-w-lg text-sm leading-relaxed text-white/50 sm:text-base">
+            We combine advanced technology with expert guidance to detect
+            incidents early, analyze root causes instantly, and keep your
+            operations running securely around the clock.
           </p>
-          <div className="hero-buttons">
-            <button 
-              className="btn btn-primary"
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button
               onClick={() => onAuthClick("signup")}
+              className="bg-green-400 px-6 py-3 font-mono text-sm font-medium uppercase tracking-wide text-black transition-colors hover:bg-green-300 rounded-lg"
             >
-              Get Started for Free
+              Get a demo
             </button>
-            <button className="btn btn-secondary">
-              Learn More
+
+            <button className="border border-white/25 px-6 py-3 font-mono text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-white/10 rounded-lg">
+              Learn more
             </button>
           </div>
         </div>
-        <div className="hero-illustration">
-          <div className="floating-card card-1">
-            <div className="card-icon">📊</div>
-            <p>Real-time Monitoring</p>
-          </div>
-          <div className="floating-card card-2">
-            <div className="card-icon">🤖</div>
-            <p>AI Analysis</p>
-          </div>
-          <div className="floating-card card-3">
-            <div className="card-icon">⚙️</div>
-            <p>Auto-Resolution</p>
-          </div>
+        <div className="absolute inset-y-0 right-0 w-[45%] overflow-hidden border-l border-white/10 max-lg:hidden">
+          {/* LightPillar here */}
+          <LightPillar
+            topColor="#27d036"
+            bottomColor="#d5bdd4"
+            intensity={1}
+            rotationSpeed={0.3}
+            glowAmount={0.002}
+            pillarWidth={3}
+            pillarHeight={0.4}
+            noiseIntensity={0.5}
+            pillarRotation={25}
+            interactive={false}
+            mixBlendMode="screen"
+            quality="high"
+            className=""
+          />
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="features">
-        <h2>Why Choose AI Ops?</h2>
-        <div className="features-grid">
-          <div className="feature-card">
-            <div className="feature-icon">🚀</div>
-            <h3>Fast Incident Detection</h3>
-            <p>Detect anomalies and incidents instantly with advanced AI algorithms</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">🧠</div>
-            <h3>Intelligent Analysis</h3>
-            <p>Get AI-powered root cause analysis and insights for every incident</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">⏱️</div>
-            <h3>Reduce MTTR</h3>
-            <p>Slash your mean time to resolution with automated recommendations</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">🔒</div>
-            <h3>Enterprise Security</h3>
-            <p>Bank-grade security with encrypted data and compliance certifications</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">📈</div>
-            <h3>Scalable Infrastructure</h3>
-            <p>Handle millions of events with our distributed, scalable platform</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">🔗</div>
-            <h3>Easy Integration</h3>
-            <p>Integrate with your existing tools and workflows in minutes</p>
-          </div>
+      {/* Features */}
+      <section className="relative top-20 border border-white/25 p-6 sm:p-10 lg:mx-5">
+        <span className="inline-flex items-center gap-2 rounded-lg bg-green-400/15 px-3 py-2 text-xs text-green-300 ring-1 ring-green-400/25">
+          Built for operations teams
+        </span>
+
+        <h2 className="mt-4 max-w-2xl font-mono text-2xl font-bold uppercase leading-[1.15] tracking-tight text-white sm:text-3xl lg:text-4xl">
+          Why choose AI Ops?
+        </h2>
+
+        <div className="mt-10 grid gap-px bg-white/15 sm:grid-cols-2 lg:grid-cols-3">
+          {features.map((f) => (
+            <div
+              key={f.title}
+              className="bg-black p-6 transition-colors hover:bg-green-400/5"
+            >
+              <div className="text-2xl">{f.icon}</div>
+              <h3 className="mt-4 font-mono text-base font-bold uppercase tracking-tight text-white">
+                {f.title}
+              </h3>
+              <p className="mt-3 text-sm leading-relaxed text-white/50">
+                {f.body}
+              </p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="cta">
-        <h2>Ready to Transform Your Operations?</h2>
-        <p>Join thousands of teams using AI Ops to manage their infrastructure</p>
-        <button 
-          className="btn btn-primary btn-large"
+      {/* CTA */}
+      <section className="relative top-30 mb-40 border border-white/25 bg-linear-to-br from-green-400/10 to-transparent p-8 text-center sm:p-14 lg:mx-5">
+        <h2 className="mx-auto max-w-3xl font-mono text-2xl font-bold uppercase leading-[1.15] tracking-tight text-white sm:text-3xl lg:text-4xl">
+          Ready to transform your operations?
+        </h2>
+
+        <p className="mx-auto mt-5 max-w-lg text-sm leading-relaxed text-white/50 sm:text-base">
+          Join thousands of teams using AI Ops to manage their infrastructure
+        </p>
+
+        <button
           onClick={() => onAuthClick("signup")}
+          className="mt-8 rounded-lg bg-green-400 px-8 py-4 font-mono text-sm font-medium uppercase tracking-wide text-black transition-colors hover:bg-green-300"
         >
-          Start Your Free Trial
+          Start your free trial
         </button>
       </section>
 
-      {/* Footer */}
-      <footer className="landing-footer">
-        <p>&copy; 2026 AI Ops. All rights reserved.</p>
+      <footer className="flex h-30 items-center justify-center text-white border border-t-white/15">
+        <p className="self-center">&copy; 2026 AI Ops. All rights reserved.</p>
       </footer>
-    </div>
+
+    </main>
   );
 }
