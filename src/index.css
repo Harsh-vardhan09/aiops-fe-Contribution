@@ -8,6 +8,21 @@ body,
   min-height: 100%;
 }
 
+a,
+button,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+input[type="reset"] {
+  cursor: pointer;
+}
+
+button:disabled,
+[role="button"][aria-disabled="true"],
+input:disabled {
+  cursor: not-allowed;
+}
+
 @keyframes fadeInSwift {
   0% {
     opacity: 0;

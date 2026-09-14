@@ -26,8 +26,8 @@ export default function Navbar({
     "rounded-lg px-4 py-2 border border-white/15 text-sm font-medium text-white transition-colors hover:bg-white/10 disabled:opacity-50";
 
   return (
-    <nav className="relative top-5 z-50  bg-black flex justify-center border border-white/25 mx-5">
-      <div className="mx-auto flex w-full max-w-7xl flex-wrap gap-3  items-center justify-between px-4 py-3 sm:px-6">
+    <nav className="w-full rounded-2xl border border-white/20 bg-black/60 px-4 py-3 sm:px-6">
+      <div className="flex w-full flex-wrap items-center justify-between gap-3">
         <button
           type="button"
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
