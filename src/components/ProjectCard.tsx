@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Check } from "lucide-react";
 
 interface Props {
   name: string;
@@ -31,8 +32,14 @@ export default function ProjectCard({ name, apiKey }: Props) {
           {apiKey}
         </pre>
 
-        <button onClick={copyToClipboard}>
-          {copied ? "Copied ✓" : "Copy"}
+        <button onClick={copyToClipboard} className="inline-flex items-center gap-1">
+          {copied ? (
+            <>
+              Copied <Check className="h-3.5 w-3.5" />
+            </>
+          ) : (
+            "Copy"
+          )}
         </button>
       </div>
     </div>

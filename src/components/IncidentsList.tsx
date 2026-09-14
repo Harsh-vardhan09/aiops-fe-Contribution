@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
 import { fetchIncidents, analyzeIncident } from "../api/backend";
 import { supabase } from "../lib/supabase";
+import {
+  PartyPopper,
+  Bot,
+  BarChart3,
+  Target,
+  TrendingUp,
+  Siren,
+  User,
+  Lightbulb,
+} from "lucide-react";
 
 type Analysis = {
   root_cause: string;
@@ -77,8 +87,9 @@ export default function IncidentsList() {
       {error && <div className="error-message">Error: {error}</div>}
 
       {incidents.length === 0 && !error && (
-        <div className="empty-message">
-          No incidents found. Your systems are healthy! 🎉
+        <div className="empty-message flex items-center justify-center gap-2">
+          <span>No incidents found. Your systems are healthy!</span>
+          <PartyPopper className="h-5 w-5 text-green-400 inline" />
         </div>
       )}
 
@@ -99,7 +110,7 @@ export default function IncidentsList() {
               </div>
 
               <button
-                className="incident-action-btn"
+                className="incident-action-btn inline-flex items-center justify-center gap-2"
                 onClick={async () => {
                   try {
                     setAnalyzingId(incident.id);
@@ -118,20 +129,27 @@ export default function IncidentsList() {
                 }}
                 disabled={analyzingId === incident.id}
               >
-                {analyzingId === incident.id ? "🤖 Analyzing..." : "🤖 Run AI Analysis"}
+                <Bot className={`h-4 w-4 ${analyzingId === incident.id ? "animate-spin" : ""}`} />
+                {analyzingId === incident.id ? "Analyzing..." : "Run AI Analysis"}
               </button>
 
               {/* AI Analysis Result */}
               {analysis && (
                 <div className="analysis-container">
-                  <h4 className="analysis-title">📊 AI Analysis Result</h4>
+                  <h4 className="analysis-title flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4 text-green-400" /> AI Analysis Result
+                  </h4>
                   <div className="analysis-content">
                     <div className="analysis-item">
-                      <span className="analysis-label">🎯 Root Cause:</span>
+                      <span className="analysis-label flex items-center gap-1.5">
+                        <Target className="h-4 w-4 text-green-400 inline shrink-0" /> Root Cause:
+                      </span>
                       <span className="analysis-value">{analysis.root_cause}</span>
                     </div>
                     <div className="analysis-item">
-                      <span className="analysis-label">📈 Confidence:</span>
+                      <span className="analysis-label flex items-center gap-1.5">
+                        <TrendingUp className="h-4 w-4 text-green-400 inline shrink-0" /> Confidence:
+                      </span>
                       <span className="analysis-value">
                         {analysis.confidence !== undefined
                           ? `${(analysis.confidence * 100).toFixed(0)}%`
@@ -139,11 +157,15 @@ export default function IncidentsList() {
                       </span>
                     </div>
                     <div className="analysis-item">
-                      <span className="analysis-label">🚨 Severity:</span>
+                      <span className="analysis-label flex items-center gap-1.5">
+                        <Siren className="h-4 w-4 text-red-400 inline shrink-0" /> Severity:
+                      </span>
                       <span className="analysis-value">{analysis.severity}</span>
                     </div>
                     <div className="analysis-item">
-                      <span className="analysis-label">👤 Needs Human Review:</span>
+                      <span className="analysis-label flex items-center gap-1.5">
+                        <User className="h-4 w-4 text-slate-300 inline shrink-0" /> Needs Human Review:
+                      </span>
                       <span className="analysis-value">
                         {analysis.needs_human ? "Yes" : "No"}
                       </span>
@@ -151,7 +173,9 @@ export default function IncidentsList() {
 
                     {analysis.suggested_fixes?.length > 0 && (
                       <div className="mt-4 border-t border-slate-400/20 pt-4">
-                        <span className="analysis-label">💡 Suggested Fixes:</span>
+                        <span className="analysis-label flex items-center gap-1.5">
+                          <Lightbulb className="h-4 w-4 text-yellow-400 inline shrink-0" /> Suggested Fixes:
+                        </span>
                         <ul className="mt-2 mb-0 pl-6">
                           {analysis.suggested_fixes.map((fix, idx) => (
                             <li key={idx} className="mb-2 text-slate-300">

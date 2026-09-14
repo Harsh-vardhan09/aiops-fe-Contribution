@@ -1,34 +1,42 @@
 import LightPillar from "@/components/LightPillar";
 import Navbar from "../components/Navbar";
+import {
+  Rocket,
+  Brain,
+  Timer,
+  Lock,
+  TrendingUp,
+  Link as LinkIcon,
+} from "lucide-react";
 
 const features = [
   {
-    icon: "\u{1F680}",
+    icon: Rocket,
     title: "Fast Incident Detection",
     body: "Detect anomalies and incidents instantly with advanced AI algorithms",
   },
   {
-    icon: "\u{1F9E0}",
+    icon: Brain,
     title: "Intelligent Analysis",
     body: "Get AI-powered root cause analysis and insights for every incident",
   },
   {
-    icon: "⏱️",
+    icon: Timer,
     title: "Reduce MTTR",
     body: "Slash your mean time to resolution with automated recommendations",
   },
   {
-    icon: "\u{1F512}",
+    icon: Lock,
     title: "Enterprise Security",
     body: "Bank-grade security with encrypted data and compliance certifications",
   },
   {
-    icon: "\u{1F4C8}",
+    icon: TrendingUp,
     title: "Scalable Infrastructure",
     body: "Handle millions of events with our distributed, scalable platform",
   },
   {
-    icon: "\u{1F517}",
+    icon: LinkIcon,
     title: "Easy Integration",
     body: "Integrate with your existing tools and workflows in minutes",
   },
@@ -111,20 +119,25 @@ export default function Landing({
         </h2>
 
         <div className="mt-10 grid gap-px bg-white/15 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((f) => (
-            <div
-              key={f.title}
-              className="bg-black p-6 transition-colors hover:bg-green-400/5"
-            >
-              <div className="text-2xl">{f.icon}</div>
-              <h3 className="mt-4 font-mono text-base font-bold uppercase tracking-tight text-white">
-                {f.title}
-              </h3>
-              <p className="mt-3 text-sm leading-relaxed text-white/50">
-                {f.body}
-              </p>
-            </div>
-          ))}
+          {features.map((f) => {
+            const Icon = f.icon;
+            return (
+              <div
+                key={f.title}
+                className="bg-black p-6 transition-colors hover:bg-green-400/5"
+              >
+                <div className="text-green-400">
+                  <Icon className="h-6 w-6" />
+                </div>
+                <h3 className="mt-4 font-mono text-base font-bold uppercase tracking-tight text-white">
+                  {f.title}
+                </h3>
+                <p className="mt-3 text-sm leading-relaxed text-white/50">
+                  {f.body}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </section>
 

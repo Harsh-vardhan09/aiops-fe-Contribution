@@ -3,7 +3,8 @@ import { supabase } from "../lib/supabase";
 import Logo from "../components/Logo";
 import { createProject } from "../api/backend";
 import IncidentsList from "../components/IncidentsList";
-import "../styles/dashboard.css"
+import { CheckCircle2, Check } from "lucide-react";
+import "../styles/dashboard.css";
 
 export default function Dashboard({ 
   session: initialSession,
@@ -128,7 +129,10 @@ export default function Dashboard({
           {/* API Key Card */}
           {project && (
             <div className="card">
-              <h3 className="card-title">✅ Project Created Successfully</h3>
+              <h3 className="card-title flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-green-400 inline shrink-0" />
+                Project Created Successfully
+              </h3>
               <div className="card-content">
                 <div className="card-row">
                   <span className="card-label">Project Name</span>
@@ -139,9 +143,15 @@ export default function Dashboard({
                     <span className="card-label">API Key</span>
                     <button
                       onClick={handleCopyApiKey}
-                      className="cursor-pointer rounded border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-[0.8rem] font-semibold text-blue-400 transition-all hover:border-blue-500/30 hover:bg-blue-500/15"
+                      className="cursor-pointer rounded border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-[0.8rem] font-semibold text-blue-400 transition-all hover:border-blue-500/30 hover:bg-blue-500/15 inline-flex items-center gap-1"
                     >
-                      {copyFeedback ? "✓ Copied" : "Copy"}
+                      {copyFeedback ? (
+                        <>
+                          <Check className="h-3.5 w-3.5" /> Copied
+                        </>
+                      ) : (
+                        "Copy"
+                      )}
                     </button>
                   </div>
                   <div className="api-key-display">{project.api_key}</div>
