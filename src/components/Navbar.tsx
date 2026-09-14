@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
+import Logo from "./Logo";
 
 export default function Navbar({
   session,
@@ -32,7 +33,7 @@ export default function Navbar({
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           className="flex items-center gap-2 text-white"
         >
-          <span className="text-xl">⚡</span>
+          <Logo className="h-6 w-6 text-green-400" />
           <span className="text-lg font-semibold tracking-tight">AI Ops</span>
         </button>
 
