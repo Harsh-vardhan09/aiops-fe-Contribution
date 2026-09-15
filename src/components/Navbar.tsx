@@ -6,10 +6,14 @@ export default function Navbar({
   session,
   onAuthClick,
   onDashboardClick,
+  onLogoClick,
 }: {
   session: any;
-  onAuthClick: (mode: "login" | "signup") => void;
-  onDashboardClick: () => void;
+  onAuthClick?: (mode: "login" | "signup") => void;
+  /** Omit to hide the Dashboard link (e.g. when already on the dashboard). */
+  onDashboardClick?: () => void;
+  /** Defaults to scrolling to the top of the current page. */
+  onLogoClick?: () => void;
 }) {
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
 
@@ -30,7 +34,7 @@ export default function Navbar({
       <div className="mx-auto flex w-full max-w-7xl flex-wrap gap-3  items-center justify-between px-4 py-3 sm:px-6">
         <button
           type="button"
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          onClick={onLogoClick ?? (() => window.scrollTo({ top: 0, behavior: "smooth" }))}
           className="flex items-center gap-2 text-white"
         >
           <Logo className="h-6 w-6 text-green-400" />
@@ -43,9 +47,11 @@ export default function Navbar({
               <span className="hidden text-sm text-white/60 sm:inline">
                 {session.user?.email}
               </span>
-              <button className={btn} onClick={onDashboardClick}>
-                Dashboard
-              </button>
+              {onDashboardClick && (
+                <button className={btn} onClick={onDashboardClick}>
+                  Dashboard
+                </button>
+              )}
               <button
                 className={btn}
                 onClick={handleLogout}
@@ -56,12 +62,12 @@ export default function Navbar({
             </>
           ) : (
             <>
-              <button className={btn} onClick={() => onAuthClick("login")}>
+              <button className={btn} onClick={() => onAuthClick?.("login")}>
                 Login
               </button>
               <button
                 className="rounded-lg bg-green-500 px-4 py-2  text-sm font-medium text-black transition-colors hover:bg-white/90"
-                onClick={() => onAuthClick("signup")}
+                onClick={() => onAuthClick?.("signup")}
               >
                 Sign Up
               </button>
