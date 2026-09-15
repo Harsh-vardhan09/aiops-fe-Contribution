@@ -2,11 +2,25 @@ import { useState } from "react";
 import Navbar from "../components/Navbar";
 import { createProject } from "../api/backend";
 import IncidentsList from "../components/IncidentsList";
+import {
+  alertError,
+  alertWarn,
+  badgeAccent,
+  bodySm,
+  btnPrimary,
+  btnSmall,
+  glow,
+  h2,
+  h4,
+  input as inputCls,
+  label,
+  panelPad,
+} from "../lib/ui";
 
-function Dashboard({ 
+export default function Dashboard({
   session: initialSession,
-  onNavigateHome 
-}: { 
+  onNavigateHome
+}: {
   session: any;
   onNavigateHome: () => void;
 }) {
@@ -15,6 +29,7 @@ function Dashboard({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
+  const [keyVisible, setKeyVisible] = useState(false);
 
   const handleCreateProject = async () => {
     if (!projectName.trim()) {
@@ -42,7 +57,7 @@ function Dashboard({
 
   const handleCopyApiKey = async () => {
     if (!project?.api_key) return;
-    
+
     try {
       await navigator.clipboard.writeText(project.api_key);
       setCopyFeedback("Copied to clipboard!");
@@ -55,89 +70,144 @@ function Dashboard({
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-black">
-      {/* ambient green glow */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-green-400/10 blur-[120px]" />
+      <div className={`${glow} -top-40`} />
 
       <div className="relative">
         <Navbar session={initialSession} onLogoClick={onNavigateHome} />
 
-        <main className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:py-24">
-          {/* Create Project */}
-          <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 backdrop-blur-xl sm:p-10">
-            {/* <h1 className="font-mono text-2xl font-bold uppercase leading-tight tracking-tight text-white sm:text-3xl">
-              Create project
-            </h1> */}
-            <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/50">
-              Spin up a project to get an API key and start streaming incidents.
-            </p>
-
-            {error && (
-              <div className="mt-6 rounded-lg border border-red-400/25 bg-red-400/10 px-4 py-3 text-sm text-red-300">
-                {error}
+        <main className="mx-auto w-full max-w-7xl px-5 py-12 sm:px-8 lg:py-20">
+          {/* Create project ------------------------------------------------ */}
+          <section className={panelPad}>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h1 className={h2}>Create project</h1>
+                <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/50">
+                  Spin up a project to get an API key and start streaming
+                  incidents into AI Ops.
+                </p>
               </div>
-            )}
+              <span className={badgeAccent}>Projects</span>
+            </div>
 
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-end">
-              <div className="flex-1">
-                <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.15em] text-white/50">
+            <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-start">
+              <div className="min-w-0 flex-1">
+                <label htmlFor="project-name" className={`mb-2 block ${label}`}>
                   Project Name
                 </label>
                 <input
+                  id="project-name"
                   type="text"
                   placeholder="My AI Operations Project"
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleCreateProject()}
-                  className="w-full rounded-lg border border-green-400/20 bg-green-400/[0.06] px-4 py-3 text-sm text-white backdrop-blur-sm transition-colors placeholder:text-white/30 focus:border-green-400/50 focus:bg-green-400/10 focus:outline-none"
+                  aria-invalid={!!error}
+                  aria-describedby={error ? "project-error" : undefined}
+                  className={inputCls}
                 />
+                <p className={`mt-2 ${bodySm}`}>
+                  Press Enter to create.
+                </p>
               </div>
-              <button 
+              <button
                 onClick={handleCreateProject}
                 disabled={loading}
-                className="rounded-lg bg-green-400 px-6 py-3 font-mono text-sm font-medium uppercase tracking-wide text-black transition-colors hover:bg-green-300 disabled:opacity-50"
+                className={`${btnPrimary} w-full shrink-0 sm:mt-[1.6rem] sm:w-auto`}
               >
-                {loading ? "Creating..." : "Create"}
+                {loading ? "Creating..." : "Create project"}
               </button>
             </div>
 
-            {/* API Key */}
+            {error && (
+              <div
+                id="project-error"
+                role="alert"
+                className={`mt-6 flex items-start gap-3 ${alertError}`}
+              >
+                <span aria-hidden="true">⚠</span>
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* Created state ---------------------------------------------- */}
             {project && (
-              <div className="mt-8 rounded-xl border border-green-400/20 bg-green-400/[0.06] p-5 backdrop-blur-xl sm:p-6">
-                <h3 className="font-mono text-sm font-bold uppercase tracking-wide text-green-300">
-                  ✅ Project created successfully
-                </h3>
-
-                <div className="mt-5 flex items-center justify-between gap-4 border-b border-white/10 pb-4">
-                  <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-white/50">
-                    Project Name
-                  </span>
-                  <span className="text-sm text-white">{project.name}</span>
+              <div className="mt-10 overflow-hidden rounded-xl border border-green-400/20 bg-green-400/[0.04] backdrop-blur-sm">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-green-400/15 bg-green-400/[0.06] px-5 py-4">
+                  <h3 className={h4}>✅ Project created successfully</h3>
+                  <span className={badgeAccent}>Live</span>
                 </div>
 
-                <div className="mt-4">
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-white/50">
-                      API Key
+                <dl className="divide-y divide-white/10 px-5">
+                  <div className="flex flex-col gap-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+                    <dt className={label}>Project Name</dt>
+                    <dd className="min-w-0 break-words text-sm text-white">
+                      {project.name}
+                    </dd>
+                  </div>
+
+                  {project.id && (
+                    <div className="flex flex-col gap-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+                      <dt className={label}>Project ID</dt>
+                      <dd className="min-w-0 break-all font-mono text-xs text-white/70">
+                        {project.id}
+                      </dd>
+                    </div>
+                  )}
+
+                  <div className="py-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <dt className={label}>API Key</dt>
+                      <dd className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setKeyVisible((v) => !v)}
+                          aria-pressed={keyVisible}
+                          className={btnSmall}
+                        >
+                          {keyVisible ? "Hide" : "Reveal"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleCopyApiKey}
+                          className={`${btnSmall} ${
+                            copyFeedback
+                              ? "border-green-400/40 bg-green-400/10 text-green-300"
+                              : ""
+                          }`}
+                        >
+                          {copyFeedback ? "✓ Copied" : "Copy"}
+                        </button>
+                      </dd>
+                    </div>
+
+                    <div className="mt-3 overflow-x-auto rounded-lg border border-white/10 bg-black/60 px-4 py-3">
+                      <code className="block whitespace-pre font-mono text-[13px] leading-relaxed text-green-400">
+                        {keyVisible
+                          ? project.api_key
+                          : "•".repeat(
+                              String(project.api_key ?? "").length || 32
+                            )}
+                      </code>
+                    </div>
+
+                    <p role="note" className={`mt-3 flex items-start gap-3 ${alertWarn}`}>
+                      <span aria-hidden="true">🔒</span>
+                      <span className="text-xs leading-relaxed">
+                        Keep this key secret and secure. Send it only from your
+                        backend — never commit it or expose it in client code.
+                      </span>
+                    </p>
+
+                    <span aria-live="polite" className="sr-only">
+                      {copyFeedback ?? ""}
                     </span>
-                    <button
-                      onClick={handleCopyApiKey}
-                      className="rounded-md border border-white/15 px-3 py-1.5 font-mono text-[11px] uppercase tracking-wide text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-                    >
-                      {copyFeedback ? "✓ Copied" : "Copy"}
-                    </button>
                   </div>
-                  <div className="overflow-x-auto rounded-lg border border-white/10 bg-black/50 p-3 font-mono text-[13px] text-green-400">
-                    {project.api_key}
-                  </div>
-                  <p className="mt-3 text-xs leading-relaxed text-white/40">
-                    Keep this key secret and secure. Use it to send incidents to AI Ops.
-                  </p>
-                </div>
+                </dl>
               </div>
             )}
           </section>
 
-          {/* Incidents */}
+          {/* Incidents ----------------------------------------------------- */}
           <IncidentsList />
         </main>
       </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
 import Logo from "./Logo";
+import { btnGhost, btnPrimary, focusRing } from "../lib/ui";
 
 export default function Navbar({
   session,
@@ -26,34 +27,38 @@ export default function Navbar({
     }
   };
 
-  const btn =
-    "rounded-lg px-4 py-2 border border-white/15 text-sm font-medium text-white transition-colors hover:bg-white/10 disabled:opacity-50";
+  /** Nav-sized variants of the shared button tokens. */
+  const ghost = `${btnGhost} px-4 py-2 text-xs sm:text-sm`;
+  const primary = `${btnPrimary} px-4 py-2 text-xs sm:text-sm`;
 
   return (
-    <nav className="relative top-5 z-50  bg-black flex justify-center border border-white/25 mx-5">
-      <div className="mx-auto flex w-full max-w-7xl flex-wrap gap-3  items-center justify-between px-4 py-3 sm:px-6">
+    <nav className="sticky top-0 z-50 border-b border-white/10 bg-black/70 backdrop-blur-xl">
+      <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-5 py-3 sm:px-8">
         <button
           type="button"
-          onClick={onLogoClick ?? (() => window.scrollTo({ top: 0, behavior: "smooth" }))}
-          className="flex items-center gap-2 text-white"
+          onClick={
+            onLogoClick ??
+            (() => window.scrollTo({ top: 0, behavior: "smooth" }))
+          }
+          className={`flex items-center gap-2 rounded-lg text-white ${focusRing}`}
         >
           <Logo className="h-6 w-6 text-green-400" />
           <span className="text-lg font-semibold tracking-tight">AI Ops</span>
         </button>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           {session ? (
             <>
-              <span className="hidden text-sm text-white/60 sm:inline">
+              <span className="hidden max-w-[16rem] truncate text-sm text-white/50 sm:inline">
                 {session.user?.email}
               </span>
               {onDashboardClick && (
-                <button className={btn} onClick={onDashboardClick}>
+                <button className={ghost} onClick={onDashboardClick}>
                   Dashboard
                 </button>
               )}
               <button
-                className={btn}
+                className={ghost}
                 onClick={handleLogout}
                 disabled={isLogoutLoading}
               >
@@ -62,11 +67,11 @@ export default function Navbar({
             </>
           ) : (
             <>
-              <button className={btn} onClick={() => onAuthClick?.("login")}>
+              <button className={ghost} onClick={() => onAuthClick?.("login")}>
                 Login
               </button>
               <button
-                className="rounded-lg bg-green-500 px-4 py-2  text-sm font-medium text-black transition-colors hover:bg-white/90"
+                className={primary}
                 onClick={() => onAuthClick?.("signup")}
               >
                 Sign Up
