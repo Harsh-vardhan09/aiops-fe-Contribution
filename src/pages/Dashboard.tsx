@@ -1,11 +1,9 @@
 import { useState } from "react";
-import { supabase } from "../lib/supabase";
-import Logo from "../components/Logo";
+import Navbar from "../components/Navbar";
 import { createProject } from "../api/backend";
 import IncidentsList from "../components/IncidentsList";
-import "../styles/dashboard.css"
 
-export default function Dashboard({ 
+function Dashboard({ 
   session: initialSession,
   onNavigateHome 
 }: { 
@@ -17,7 +15,6 @@ export default function Dashboard({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
-  const [isLogoutLoading, setIsLogoutLoading] = useState(false);
 
   const handleCreateProject = async () => {
     if (!projectName.trim()) {
@@ -56,107 +53,96 @@ export default function Dashboard({
     }
   };
 
-  const handleLogout = async () => {
-    setIsLogoutLoading(true);
-    try {
-      await supabase.auth.signOut();
-    } finally {
-      setIsLogoutLoading(false);
-    }
-  };
-
   return (
-    <div className="dashboard-container">
-      {/* Header */}
-      <header className="">
-        <div className="dashboard-header-content">
-          <div
-            className="dashboard-logo cursor-pointer"
-            onClick={onNavigateHome}
-          >
-            <Logo className="h-6 w-6 text-green-400" />
-            <span className="dashboard-logo-text">AI Ops</span>
-          </div>
-          <div className="dashboard-user-info">
-            {initialSession && (
-              <span className="user-email">{initialSession.user?.email}</span>
+    <div className="relative min-h-screen overflow-hidden bg-black">
+      {/* ambient green glow */}
+      <div className="pointer-events-none absolute -top-40 left-1/2 h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-green-400/10 blur-[120px]" />
+
+      <div className="relative">
+        <Navbar session={initialSession} onLogoClick={onNavigateHome} />
+
+        <main className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:py-24">
+          {/* Create Project */}
+          <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 backdrop-blur-xl sm:p-10">
+            {/* <h1 className="font-mono text-2xl font-bold uppercase leading-tight tracking-tight text-white sm:text-3xl">
+              Create project
+            </h1> */}
+            <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/50">
+              Spin up a project to get an API key and start streaming incidents.
+            </p>
+
+            {error && (
+              <div className="mt-6 rounded-lg border border-red-400/25 bg-red-400/10 px-4 py-3 text-sm text-red-300">
+                {error}
+              </div>
             )}
-            <button 
-              className="logout-btn"
-              onClick={handleLogout}
-              disabled={isLogoutLoading}
-            >
-              {isLogoutLoading ? "Logging out..." : "Logout"}
-            </button>
-          </div>
-        </div>
-      </header>
 
-      {/* Main Content */}
-      <div className="dashboard-content">
-        {/* Create Project Section */}
-        <div className="mb-12">
-          <div className="section-header">
-            <h1 className="section-title">Create Project</h1>
-          </div>
-
-          {error && <div className="error-message">{error}</div>}
-
-          <div className="mb-8 flex items-end gap-4">
-            <div className="flex-1">
-              <label className="mb-2 block font-semibold text-slate-300">
-                Project Name
-              </label>
-              <input
-                type="text"
-                placeholder="My AI Operations Project"
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleCreateProject()}
-                className="w-full rounded-lg border border-slate-400/20 bg-slate-700/50 px-4 py-3 font-[inherit] text-base text-slate-200 transition-colors focus:border-blue-500 focus:bg-slate-700/70 focus:outline-none"
-              />
+            <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-end">
+              <div className="flex-1">
+                <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.15em] text-white/50">
+                  Project Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="My AI Operations Project"
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleCreateProject()}
+                  className="w-full rounded-lg border border-green-400/20 bg-green-400/[0.06] px-4 py-3 text-sm text-white backdrop-blur-sm transition-colors placeholder:text-white/30 focus:border-green-400/50 focus:bg-green-400/10 focus:outline-none"
+                />
+              </div>
+              <button 
+                onClick={handleCreateProject}
+                disabled={loading}
+                className="rounded-lg bg-green-400 px-6 py-3 font-mono text-sm font-medium uppercase tracking-wide text-black transition-colors hover:bg-green-300 disabled:opacity-50"
+              >
+                {loading ? "Creating..." : "Create"}
+              </button>
             </div>
-            <button 
-              className="action-btn action-btn-primary"
-              onClick={handleCreateProject}
-              disabled={loading}
-            >
-              {loading ? "Creating..." : "Create"}
-            </button>
-          </div>
 
-          {/* API Key Card */}
-          {project && (
-            <div className="card">
-              <h3 className="card-title">✅ Project Created Successfully</h3>
-              <div className="card-content">
-                <div className="card-row">
-                  <span className="card-label">Project Name</span>
-                  <span className="card-value">{project.name}</span>
+            {/* API Key */}
+            {project && (
+              <div className="mt-8 rounded-xl border border-green-400/20 bg-green-400/[0.06] p-5 backdrop-blur-xl sm:p-6">
+                <h3 className="font-mono text-sm font-bold uppercase tracking-wide text-green-300">
+                  ✅ Project created successfully
+                </h3>
+
+                <div className="mt-5 flex items-center justify-between gap-4 border-b border-white/10 pb-4">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-white/50">
+                    Project Name
+                  </span>
+                  <span className="text-sm text-white">{project.name}</span>
                 </div>
+
                 <div className="mt-4">
                   <div className="mb-2 flex items-center justify-between">
-                    <span className="card-label">API Key</span>
+                    <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-white/50">
+                      API Key
+                    </span>
                     <button
                       onClick={handleCopyApiKey}
-                      className="cursor-pointer rounded border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-[0.8rem] font-semibold text-blue-400 transition-all hover:border-blue-500/30 hover:bg-blue-500/15"
+                      className="rounded-md border border-white/15 px-3 py-1.5 font-mono text-[11px] uppercase tracking-wide text-white/70 transition-colors hover:bg-white/10 hover:text-white"
                     >
                       {copyFeedback ? "✓ Copied" : "Copy"}
                     </button>
                   </div>
-                  <div className="api-key-display">{project.api_key}</div>
-                  <p className="mt-2 mb-0 text-[0.85rem] text-slate-400">
+                  <div className="overflow-x-auto rounded-lg border border-white/10 bg-black/50 p-3 font-mono text-[13px] text-green-400">
+                    {project.api_key}
+                  </div>
+                  <p className="mt-3 text-xs leading-relaxed text-white/40">
                     Keep this key secret and secure. Use it to send incidents to AI Ops.
                   </p>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </section>
 
-        {/* Incidents Section */}
-        <IncidentsList />
+          {/* Incidents */}
+          <IncidentsList />
+        </main>
       </div>
     </div>
   );
 }
+
+export default Dashboard;
