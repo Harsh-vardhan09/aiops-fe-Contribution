@@ -74,6 +74,12 @@ export default function App() {
     localStorage.setItem("lastPage", page);
   };
 
+  const handleLogout = () => {
+    setSession(null);
+    setCurrentPage("landing");
+    localStorage.removeItem("lastPage");
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 text-slate-200">
@@ -102,6 +108,7 @@ export default function App() {
           <Dashboard
             session={session}
             onNavigateHome={() => handleNavigateToPage("landing")}
+            onLogout={handleLogout}
           />
         ) : (
           <Auth

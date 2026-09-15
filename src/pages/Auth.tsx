@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
 import Logo from "../components/Logo";
+import { ArrowLeft } from "lucide-react";
 
 export default function Auth({ 
   onNavigateHome,
@@ -62,8 +63,9 @@ export default function Auth({
         <button
           type="button"
           onClick={onNavigateHome}
-          className="flex items-center gap-2 text-white"
+          className="group flex items-center gap-2 text-white transition-colors hover:text-green-400"
         >
+          <ArrowLeft className="h-5 w-5 text-white/70 transition-transform group-hover:-translate-x-1 group-hover:text-green-400" />
           <Logo className="h-6 w-6 text-green-400" />
           <span className="text-lg font-semibold tracking-tight">AI Ops</span>
         </button>

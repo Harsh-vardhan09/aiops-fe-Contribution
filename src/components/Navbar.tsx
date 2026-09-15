@@ -7,6 +7,7 @@ export default function Navbar({
   onAuthClick,
   onDashboardClick,
   onLogoClick,
+  onLogout,
 }: {
   session: any;
   onAuthClick?: (mode: "login" | "signup") => void;
@@ -14,6 +15,7 @@ export default function Navbar({
   onDashboardClick?: () => void;
   /** Defaults to scrolling to the top of the current page. */
   onLogoClick?: () => void;
+  onLogout?: () => void;
 }) {
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
 
@@ -21,6 +23,10 @@ export default function Navbar({
     setIsLogoutLoading(true);
     try {
       await supabase.auth.signOut();
+      onLogout?.();
+    } catch (err) {
+      console.warn("Sign out error:", err);
+      onLogout?.();
     } finally {
       setIsLogoutLoading(false);
     }
@@ -66,7 +72,7 @@ export default function Navbar({
                 Login
               </button>
               <button
-                className="rounded-lg bg-green-500 px-4 py-2  text-sm font-medium text-black transition-colors hover:bg-white/90"
+                className="rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-black transition-colors hover:bg-white/90"
                 onClick={() => onAuthClick?.("signup")}
               >
                 Sign Up
