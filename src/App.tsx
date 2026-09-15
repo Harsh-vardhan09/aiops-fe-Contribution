@@ -16,42 +16,55 @@ export default function App() {
     // Load last visited page from localStorage
     const lastPage = localStorage.getItem("lastPage") as PageState | null;
     
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      
-      // If user is logged in
-      if (data.session) {
-        // Go to the last page they were on, or dashboard if no previous page
-        const pageToLoad = (lastPage && lastPage !== "auth") ? lastPage : "dashboard";
-        setCurrentPage(pageToLoad);
-        localStorage.setItem("lastPage", pageToLoad);
-      } else {
-        // If not logged in, show landing
-        setCurrentPage("landing");
-        if (lastPage && lastPage !== "auth") {
-          localStorage.setItem("lastPage", "landing");
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        setSession(data?.session ?? null);
+        
+        // If user is logged in
+        if (data?.session) {
+          // Go to the last page they were on, or dashboard if no previous page
+          const pageToLoad = (lastPage && lastPage !== "auth") ? lastPage : "dashboard";
+          setCurrentPage(pageToLoad);
+          localStorage.setItem("lastPage", pageToLoad);
+        } else {
+          // If not logged in, show landing
+          setCurrentPage("landing");
+          if (lastPage && lastPage !== "auth") {
+            localStorage.setItem("lastPage", "landing");
+          }
         }
-      }
-      setLoading(false);
-    });
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.warn("Supabase auth getSession error:", err);
+        setCurrentPage("landing");
+        setLoading(false);
+      });
 
     // Listen for auth changes
-    const { data: authListener } = supabase.auth.onAuthStateChange((_e, session) => {
-      setSession(session);
-      
-      if (session) {
-        // When user logs in, go to dashboard
-        setCurrentPage("dashboard");
-        localStorage.setItem("lastPage", "dashboard");
-      } else {
-        // When user logs out, go to landing
-        setCurrentPage("landing");
-        localStorage.setItem("lastPage", "landing");
-      }
-    });
+    let authListener: { subscription: { unsubscribe: () => void } } | null = null;
+    try {
+      const response = supabase.auth.onAuthStateChange((_e, session) => {
+        setSession(session);
+        
+        if (session) {
+          // When user logs in, go to dashboard
+          setCurrentPage("dashboard");
+          localStorage.setItem("lastPage", "dashboard");
+        } else {
+          // When user logs out, go to landing
+          setCurrentPage("landing");
+          localStorage.setItem("lastPage", "landing");
+        }
+      });
+      authListener = response.data;
+    } catch (err) {
+      console.warn("Supabase onAuthStateChange error:", err);
+    }
 
     return () => {
-      authListener?.subscription.unsubscribe();
+      authListener?.subscription?.unsubscribe();
     };
   }, []);
 
@@ -59,6 +72,12 @@ export default function App() {
     setCurrentPage(page);
     if (mode) setAuthMode(mode);
     localStorage.setItem("lastPage", page);
+  };
+
+  const handleLogout = () => {
+    setSession(null);
+    setCurrentPage("landing");
+    localStorage.removeItem("lastPage");
   };
 
   if (loading) {
@@ -69,33 +88,34 @@ export default function App() {
     );
   }
 
-  if (currentPage === "landing") {
-    return (
-      <Landing 
-        session={session}
-        onAuthClick={(mode) => handleNavigateToPage("auth", mode)}
-        onDashboardClick={() => handleNavigateToPage("dashboard")}
-      />
-    );
-  }
-
-  if (currentPage === "auth") {
-    return (
-      <Auth 
-        onNavigateHome={() => handleNavigateToPage("landing")}
-        initialMode={authMode}
-      />
-    );
-  }
-
-  return session ? (
-    <Dashboard 
-      session={session}
-      onNavigateHome={() => handleNavigateToPage("landing")}
-    />
-  ) : (
-    <Auth 
-      onNavigateHome={() => handleNavigateToPage("landing")}
-    />
+  return (
+    <div key={currentPage} className="animate-fade-swift min-h-screen bg-black">
+      {currentPage === "landing" && (
+        <Landing
+          session={session}
+          onAuthClick={(mode) => handleNavigateToPage("auth", mode)}
+          onDashboardClick={() => handleNavigateToPage("dashboard")}
+        />
+      )}
+      {currentPage === "auth" && (
+        <Auth
+          onNavigateHome={() => handleNavigateToPage("landing")}
+          initialMode={authMode}
+        />
+      )}
+      {currentPage === "dashboard" &&
+        (session ? (
+          <Dashboard
+            session={session}
+            onNavigateHome={() => handleNavigateToPage("landing")}
+            onLogout={handleLogout}
+          />
+        ) : (
+          <Auth
+            onNavigateHome={() => handleNavigateToPage("landing")}
+            initialMode={authMode}
+          />
+        ))}
+    </div>
   );
 }
