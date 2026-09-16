@@ -131,7 +131,7 @@ export default function Dashboard() {
         <IncidentsList />
 
         {/* Footer */}
-        <footer className="w-full rounded-2xl border border-white/15 py-6 text-center text-xs sm:text-sm text-white/60 mb-6">
+        <footer className="mt-auto w-full rounded-2xl border border-white/15 py-6 text-center text-xs sm:text-sm text-white/60">
           <p>&copy; 2026 AI Ops. All rights reserved.</p>
         </footer>
     </>

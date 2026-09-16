@@ -94,15 +94,15 @@ export default function App() {
   const isModalOpen = currentPage === "auth";
 
   return (
-    <div className="relative min-h-screen bg-black">
+    <div className="relative min-h-screen flex flex-col bg-black">
       {/* Underlying layout and page content */}
       <div
         key={session ? "auth-session" : "guest-session"}
-        className={`page-blur-transition ${isModalOpen ? "page-blurred" : "page-unblurred"
+        className={`flex-1 flex flex-col page-blur-transition ${isModalOpen ? "page-blurred" : "page-unblurred"
           }`}
       >
-        <main className="min-h-screen bg-black text-white py-6">
-          <div className="mx-auto w-full max-w-[920px] px-4 flex flex-col gap-6">
+        <main className="min-h-screen flex-1 flex flex-col bg-black text-white py-6">
+          <div className="mx-auto w-full max-w-[920px] px-4 flex flex-col flex-1 gap-6">
             <Navbar
               session={session}
               onAuthClick={(mode) => handleNavigateToPage("auth", mode)}
@@ -123,7 +123,7 @@ export default function App() {
             {currentPage === "dashboard" && session ? (
               <div
                 key="dashboard-content"
-                className={`flex flex-col gap-6 animate-fade-swift page-blur-transition ${isSignOutMenuOpen ? "page-blurred" : "page-unblurred"
+                className={`flex flex-col flex-1 gap-6 animate-fade-swift page-blur-transition ${isSignOutMenuOpen ? "page-blurred" : "page-unblurred"
                   }`}
               >
                 <Dashboard />
@@ -131,7 +131,7 @@ export default function App() {
             ) : (
               <div
                 key="landing-content"
-                className={`flex flex-col gap-6 animate-fade-swift page-blur-transition ${isSignOutMenuOpen ? "page-blurred" : "page-unblurred"
+                className={`flex flex-col flex-1 gap-6 animate-fade-swift page-blur-transition ${isSignOutMenuOpen ? "page-blurred" : "page-unblurred"
                   }`}
               >
                 <Landing
