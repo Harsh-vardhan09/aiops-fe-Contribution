@@ -59,10 +59,41 @@ input:disabled {
   }
 }
 
+@keyframes dropDownSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .animate-fade-swift {
   animation: fadeInSwift 0.25s ease-out both;
 }
 
 .animate-scale-up {
   animation: scaleUpFade 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-drop-down {
+  animation: dropDownSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: top right;
+}
+
+.page-blur-transition {
+  transition: filter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: filter;
+}
+
+.page-blurred {
+  filter: blur(6px) brightness(0.75);
+  pointer-events: none;
+  user-select: none;
+}
+
+.page-unblurred {
+  filter: blur(0px) brightness(1);
 }

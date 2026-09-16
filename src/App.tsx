@@ -11,8 +11,7 @@ export default function App() {
   const [session, setSession] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState<PageState>("landing");
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [logoutLoading, setLogoutLoading] = useState(false);
+  const [isSignOutMenuOpen, setIsSignOutMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -74,7 +73,6 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    setLogoutLoading(true);
     try {
       await supabase.auth.signOut();
     } catch (err) {
@@ -83,8 +81,6 @@ export default function App() {
     setSession(null);
     setCurrentPage("landing");
     localStorage.removeItem("lastPage");
-    setLogoutLoading(false);
-    setShowLogoutModal(false);
   };
 
   if (loading) {
@@ -95,17 +91,15 @@ export default function App() {
     );
   }
 
-  const isModalOpen = currentPage === "auth" || showLogoutModal;
+  const isModalOpen = currentPage === "auth";
 
   return (
     <div className="relative min-h-screen bg-black">
       {/* Underlying layout and page content */}
       <div
-        className={`transition-all duration-300 ease-out ${
-          isModalOpen
-            ? "filter blur-[6px] brightness-75 pointer-events-none select-none"
-            : "filter blur-0 brightness-100"
-        }`}
+        key={session ? "auth-session" : "guest-session"}
+        className={`page-blur-transition ${isModalOpen ? "page-blurred" : "page-unblurred"
+          }`}
       >
         <main className="min-h-screen bg-black text-white py-6">
           <div className="mx-auto w-full max-w-[920px] px-4 flex flex-col gap-6">
@@ -121,17 +115,30 @@ export default function App() {
               }}
               onHomeClick={() => handleNavigateToPage("landing")}
               onLogoClick={() => handleNavigateToPage("landing")}
-              onRequestLogout={() => setShowLogoutModal(true)}
+              onLogout={handleLogout}
+              onMenuOpenChange={setIsSignOutMenuOpen}
               currentPage={currentPage === "dashboard" ? "dashboard" : "landing"}
             />
 
             {currentPage === "dashboard" && session ? (
-              <div key="dashboard-content" className="animate-fade-swift">
+              <div
+                key="dashboard-content"
+                className={`animate-fade-swift page-blur-transition ${isSignOutMenuOpen ? "page-blurred" : "page-unblurred"
+                  }`}
+              >
                 <Dashboard />
               </div>
             ) : (
-              <div key="landing-content" className="animate-fade-swift">
-                <Landing onAuthClick={(mode) => handleNavigateToPage("auth", mode)} />
+              <div
+                key="landing-content"
+                className={`animate-fade-swift page-blur-transition ${isSignOutMenuOpen ? "page-blurred" : "page-unblurred"
+                  }`}
+              >
+                <Landing
+                  session={session}
+                  onAuthClick={(mode) => handleNavigateToPage("auth", mode)}
+                  onDashboardClick={() => handleNavigateToPage("dashboard")}
+                />
               </div>
             )}
           </div>
@@ -144,43 +151,6 @@ export default function App() {
           onNavigateHome={() => handleNavigateToPage(session ? "dashboard" : "landing")}
           initialMode={authMode}
         />
-      )}
-
-      {/* Logout confirmation card overlay */}
-      {showLogoutModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-5 py-12 bg-black/60 backdrop-blur-md animate-fade-swift"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowLogoutModal(false);
-          }}
-        >
-          {/* ambient green glow */}
-          <div className="pointer-events-none absolute left-1/2 top-1/2 h-[38rem] w-[38rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-green-400/10 blur-[120px]" />
-
-          <div className="relative w-full max-w-md rounded-2xl border border-white/15 bg-black/30 p-8 backdrop-blur-2xl sm:p-10 animate-scale-up shadow-2xl">
-            <h2 className="font-mono text-2xl font-bold uppercase leading-tight tracking-tight text-white">
-              Are you sure?
-            </h2>
-
-            <div className="mt-8 flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setShowLogoutModal(false)}
-                className="flex-1 rounded-lg border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/10 hover:border-white/30"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={logoutLoading}
-                onClick={handleLogout}
-                className="flex-1 rounded-lg bg-red-600/90 hover:bg-red-500 px-4 py-2.5 text-sm font-medium text-white transition-colors disabled:opacity-50"
-              >
-                {logoutLoading ? "Logging out..." : "Logout"}
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );

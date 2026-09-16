@@ -42,10 +42,22 @@ const features = [
 ];
 
 export default function Landing({
+  session,
   onAuthClick,
+  onDashboardClick,
 }: {
+  session?: any;
   onAuthClick: (mode: "login" | "signup") => void;
+  onDashboardClick?: () => void;
 }) {
+  const handlePrimaryCta = () => {
+    if (session) {
+      onDashboardClick?.();
+    } else {
+      onAuthClick("signup");
+    }
+  };
+
   return (
     <>
       {/* Hero */}
@@ -67,7 +79,7 @@ export default function Landing({
 
             <div className="mt-6 flex flex-wrap gap-3">
               <button
-                onClick={() => onAuthClick("signup")}
+                onClick={handlePrimaryCta}
                 className="rounded-lg border border bg-green-400 px-5 py-2.5 text-sm font-medium text-black transition-colors hover:bg-green-300"
               >
                 Get a demo
@@ -144,7 +156,7 @@ export default function Landing({
           </p>
 
           <button
-            onClick={() => onAuthClick("signup")}
+            onClick={handlePrimaryCta}
             className="mt-6 rounded-lg border border-transparent bg-green-400 px-6 py-2.5 text-sm font-medium text-black transition-colors hover:bg-green-300"
           >
             Start your free trial
