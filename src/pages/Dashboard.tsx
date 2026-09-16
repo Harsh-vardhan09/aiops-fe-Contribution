@@ -1,18 +1,9 @@
 import { useState } from "react";
-import Navbar from "../components/Navbar";
 import { createProject } from "../api/backend";
 import IncidentsList from "../components/IncidentsList";
-import { CheckCircle2, Check, Settings } from "lucide-react";
+import { CheckCircle2, Check, Bolt } from "lucide-react";
 
-function Dashboard({
-  session: initialSession,
-  onNavigateHome,
-  onLogout,
-}: {
-  session: any;
-  onNavigateHome: () => void;
-  onLogout?: () => void;
-}) {
+export default function Dashboard() {
   const [project, setProject] = useState<any | null>(null);
   const [projectName, setProjectName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -47,19 +38,11 @@ function Dashboard({
   };
 
   return (
-    <main className="min-h-screen bg-black text-white py-6">
-      <div className="mx-auto w-full max-w-[920px] px-4 flex flex-col gap-6">
-        <Navbar
-          session={initialSession}
-          onLogoClick={onNavigateHome}
-          onLogout={onLogout}
-          currentPage="dashboard"
-        />
-
-        {/* Create Project Section */}
+    <>
+      {/* Create Project Section */}
         <section className="w-full rounded-2xl border border-white/20 overflow-hidden bg-black p-6 sm:p-8">
           <span className="inline-flex items-center gap-2 rounded-lg bg-green-400/15 px-3 py-1.5 text-xs text-green-300 ring-1 ring-green-400/25">
-            <Settings className="h-3.5 w-3.5 text-green-400" />
+            <Bolt className="h-3.5 w-3.5 text-green-400" />
             Project Setup
           </span>
 
@@ -151,9 +134,6 @@ function Dashboard({
         <footer className="w-full rounded-2xl border border-white/15 py-6 text-center text-xs sm:text-sm text-white/60 mb-6">
           <p>&copy; 2026 AI Ops. All rights reserved.</p>
         </footer>
-      </div>
-    </main>
+    </>
   );
 }
-
-export default Dashboard;

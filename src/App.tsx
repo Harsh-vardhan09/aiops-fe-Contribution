@@ -3,6 +3,7 @@ import { supabase } from "./lib/supabase";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Landing from "./pages/Landing";
+import Navbar from "./components/Navbar";
 
 type PageState = "landing" | "auth" | "dashboard";
 
@@ -10,25 +11,25 @@ export default function App() {
   const [session, setSession] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState<PageState>("landing");
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [logoutLoading, setLogoutLoading] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Load last visited page from localStorage
     const lastPage = localStorage.getItem("lastPage") as PageState | null;
-    
+
     supabase.auth
       .getSession()
       .then(({ data }) => {
         setSession(data?.session ?? null);
-        
+
         // If user is logged in
         if (data?.session) {
-          // Go to the last page they were on, or dashboard if no previous page
-          const pageToLoad = (lastPage && lastPage !== "auth") ? lastPage : "dashboard";
+          const pageToLoad = lastPage && lastPage !== "auth" ? lastPage : "dashboard";
           setCurrentPage(pageToLoad);
           localStorage.setItem("lastPage", pageToLoad);
         } else {
-          // If not logged in, show landing
           setCurrentPage("landing");
           if (lastPage && lastPage !== "auth") {
             localStorage.setItem("lastPage", "landing");
@@ -47,13 +48,11 @@ export default function App() {
     try {
       const response = supabase.auth.onAuthStateChange((_e, session) => {
         setSession(session);
-        
+
         if (session) {
-          // When user logs in, go to dashboard
           setCurrentPage("dashboard");
           localStorage.setItem("lastPage", "dashboard");
         } else {
-          // When user logs out, go to landing
           setCurrentPage("landing");
           localStorage.setItem("lastPage", "landing");
         }
@@ -74,10 +73,18 @@ export default function App() {
     localStorage.setItem("lastPage", page);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    setLogoutLoading(true);
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn("Supabase signOut error:", err);
+    }
     setSession(null);
     setCurrentPage("landing");
     localStorage.removeItem("lastPage");
+    setLogoutLoading(false);
+    setShowLogoutModal(false);
   };
 
   if (loading) {
@@ -88,58 +95,93 @@ export default function App() {
     );
   }
 
+  const isModalOpen = currentPage === "auth" || showLogoutModal;
+
   return (
     <div className="relative min-h-screen bg-black">
-      {/* Landing page in background */}
-      {(currentPage === "landing" || currentPage === "auth") && (
-        <div
-          className={`transition-all duration-300 ${
-            currentPage === "auth"
-              ? "filter blur-[6px] brightness-75 pointer-events-none select-none"
-              : ""
-          }`}
-        >
-          <Landing
-            session={session}
-            onAuthClick={(mode) => handleNavigateToPage("auth", mode)}
-            onDashboardClick={() => handleNavigateToPage("dashboard")}
-          />
-        </div>
-      )}
+      {/* Underlying layout and page content */}
+      <div
+        className={`transition-all duration-300 ease-out ${
+          isModalOpen
+            ? "filter blur-[6px] brightness-75 pointer-events-none select-none"
+            : "filter blur-0 brightness-100"
+        }`}
+      >
+        <main className="min-h-screen bg-black text-white py-6">
+          <div className="mx-auto w-full max-w-[920px] px-4 flex flex-col gap-6">
+            <Navbar
+              session={session}
+              onAuthClick={(mode) => handleNavigateToPage("auth", mode)}
+              onDashboardClick={() => {
+                if (!session) {
+                  handleNavigateToPage("auth", "login");
+                } else {
+                  handleNavigateToPage("dashboard");
+                }
+              }}
+              onHomeClick={() => handleNavigateToPage("landing")}
+              onLogoClick={() => handleNavigateToPage("landing")}
+              onRequestLogout={() => setShowLogoutModal(true)}
+              currentPage={currentPage === "dashboard" ? "dashboard" : "landing"}
+            />
 
-      {/* Auth card overlay floating above landing */}
+            {currentPage === "dashboard" && session ? (
+              <div key="dashboard-content" className="animate-fade-swift">
+                <Dashboard />
+              </div>
+            ) : (
+              <div key="landing-content" className="animate-fade-swift">
+                <Landing onAuthClick={(mode) => handleNavigateToPage("auth", mode)} />
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+
+      {/* Auth card overlay floating above */}
       {currentPage === "auth" && (
         <Auth
-          onNavigateHome={() => handleNavigateToPage("landing")}
+          onNavigateHome={() => handleNavigateToPage(session ? "dashboard" : "landing")}
           initialMode={authMode}
         />
       )}
 
-      {/* Dashboard page */}
-      {currentPage === "dashboard" &&
-        (session ? (
-          <div className="animate-fade-swift">
-            <Dashboard
-              session={session}
-              onNavigateHome={() => handleNavigateToPage("landing")}
-              onLogout={handleLogout}
-            />
-          </div>
-        ) : (
-          <div className="relative">
-            <div className="filter blur-[6px] brightness-75 pointer-events-none select-none">
-              <Landing
-                session={session}
-                onAuthClick={(mode) => handleNavigateToPage("auth", mode)}
-                onDashboardClick={() => handleNavigateToPage("dashboard")}
-              />
+      {/* Logout confirmation card overlay */}
+      {showLogoutModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-5 py-12 bg-black/60 backdrop-blur-md animate-fade-swift"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowLogoutModal(false);
+          }}
+        >
+          {/* ambient green glow */}
+          <div className="pointer-events-none absolute left-1/2 top-1/2 h-[38rem] w-[38rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-green-400/10 blur-[120px]" />
+
+          <div className="relative w-full max-w-md rounded-2xl border border-white/15 bg-black/30 p-8 backdrop-blur-2xl sm:p-10 animate-scale-up shadow-2xl">
+            <h2 className="font-mono text-2xl font-bold uppercase leading-tight tracking-tight text-white">
+              Are you sure?
+            </h2>
+
+            <div className="mt-8 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setShowLogoutModal(false)}
+                className="flex-1 rounded-lg border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/10 hover:border-white/30"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={logoutLoading}
+                onClick={handleLogout}
+                className="flex-1 rounded-lg bg-red-600/90 hover:bg-red-500 px-4 py-2.5 text-sm font-medium text-white transition-colors disabled:opacity-50"
+              >
+                {logoutLoading ? "Logging out..." : "Logout"}
+              </button>
             </div>
-            <Auth
-              onNavigateHome={() => handleNavigateToPage("landing")}
-              initialMode={authMode}
-            />
           </div>
-        ))}
+        </div>
+      )}
     </div>
   );
 }

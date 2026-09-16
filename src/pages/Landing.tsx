@@ -1,5 +1,4 @@
 import LightPillar from "@/components/LightPillar";
-import Navbar from "../components/Navbar";
 import {
   Rocket,
   Brain,
@@ -43,25 +42,13 @@ const features = [
 ];
 
 export default function Landing({
-  session,
   onAuthClick,
-  onDashboardClick,
 }: {
-  session: any;
   onAuthClick: (mode: "login" | "signup") => void;
-  onDashboardClick: () => void;
 }) {
   return (
-    <main className="min-h-screen bg-black text-white py-6">
-      <div className="mx-auto w-full max-w-[920px] px-4 flex flex-col gap-6">
-        <Navbar
-          session={session}
-          onAuthClick={onAuthClick}
-          onDashboardClick={onDashboardClick}
-          currentPage="landing"
-        />
-
-        {/* Hero */}
+    <>
+      {/* Hero */}
         <section className="relative w-full rounded-2xl border border-white/20 overflow-hidden bg-black flex flex-col lg:flex-row min-h-[460px]">
           <div className="flex-1 p-6 sm:p-8 lg:p-10 flex flex-col justify-center z-10">
             <span className="inline-flex items-center gap-2 self-start rounded-lg bg-green-400/15 py-1.5 px-3 text-xs text-green-300 ring-1 ring-green-400/25">
@@ -168,7 +155,6 @@ export default function Landing({
         <footer className="w-full rounded-2xl border border-white/15 py-6 text-center text-xs sm:text-sm text-white/60 mb-6">
           <p>&copy; 2026 AI Ops. All rights reserved.</p>
         </footer>
-      </div>
-    </main>
+    </>
   );
 }

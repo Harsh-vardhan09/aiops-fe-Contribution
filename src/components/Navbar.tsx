@@ -1,48 +1,31 @@
-import { useState } from "react";
-import { supabase } from "../lib/supabase";
 import Logo from "./Logo";
-import { User, LogOut } from "lucide-react";
+import { Home, User, LogOut } from "lucide-react";
 
 export default function Navbar({
   session,
   onAuthClick,
   onDashboardClick,
+  onHomeClick,
   onLogoClick,
-  onLogout,
+  onRequestLogout,
   currentPage = "landing",
 }: {
   session: any;
   onAuthClick?: (mode: "login" | "signup") => void;
-  /** Omit to hide the Dashboard link (e.g. when already on the dashboard). */
   onDashboardClick?: () => void;
-  /** Defaults to scrolling to the top of the current page. */
+  onHomeClick?: () => void;
   onLogoClick?: () => void;
-  onLogout?: () => void;
+  onRequestLogout?: () => void;
   currentPage?: "landing" | "dashboard";
 }) {
-  const [isLogoutLoading, setIsLogoutLoading] = useState(false);
-
-  const handleLogout = async () => {
-    setIsLogoutLoading(true);
-    try {
-      await supabase.auth.signOut();
-      onLogout?.();
-    } catch (err) {
-      console.warn("Sign out error:", err);
-      onLogout?.();
-    } finally {
-      setIsLogoutLoading(false);
-    }
-  };
-
-  const isDashboard = currentPage === "dashboard" || !onDashboardClick;
+  const isDashboard = currentPage === "dashboard";
 
   return (
     <nav className="w-full rounded-2xl border border-white/20 bg-black/60 px-4 py-3 sm:px-6">
       <div className="flex w-full flex-wrap items-center justify-between gap-3">
         <button
           type="button"
-          onClick={onLogoClick ?? (() => window.scrollTo({ top: 0, behavior: "smooth" }))}
+          onClick={onLogoClick ?? onHomeClick ?? (() => window.scrollTo({ top: 0, behavior: "smooth" }))}
           className="flex items-center gap-2 text-white"
         >
           <Logo className="h-6 w-6 text-green-400" />
@@ -51,33 +34,62 @@ export default function Navbar({
 
         <div className="flex items-center gap-3">
           {session ? (
-            <>
-              <span className="hidden text-sm text-white/60 sm:inline">
+            <div className="flex items-center gap-2">
+              <span className="hidden text-sm text-white/60 sm:inline mr-1">
                 {session.user?.email}
               </span>
-              <button
-                type="button"
-                title={isDashboard ? "Dashboard (Current)" : "Dashboard"}
-                aria-label="Dashboard"
-                className={`flex items-center justify-center p-1.5 transition-colors ${isDashboard
-                    ? "text-green-400 cursor-default"
-                    : "text-white/70 hover:text-green-400"
+
+              {/* Home & Dashboard nav group with sliding green circle */}
+              <div className="relative flex items-center gap-2">
+                {/* Sliding green circle active indicator */}
+                <div
+                  className={`absolute top-0 left-0 h-9 w-9 rounded-full bg-green-400/15 transition-transform duration-300 ease-out pointer-events-none ${
+                    isDashboard ? "translate-x-[calc(100%+0.5rem)]" : "translate-x-0"
                   }`}
-                onClick={onDashboardClick}
-              >
-                <User className={`h-5 w-5 ${isDashboard ? "fill-current" : ""}`} />
-              </button>
+                />
+
+                {/* Home Button (unfilled) */}
+                <button
+                  type="button"
+                  title="Home"
+                  aria-label="Home"
+                  onClick={onHomeClick ?? onLogoClick ?? (() => window.scrollTo({ top: 0, behavior: "smooth" }))}
+                  className={`relative z-10 flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
+                    !isDashboard
+                      ? "text-green-300"
+                      : "text-white/70 hover:text-white"
+                  }`}
+                >
+                  <Home className="h-5 w-5" />
+                </button>
+
+                {/* Dashboard / User Button (unfilled) */}
+                <button
+                  type="button"
+                  title="Dashboard"
+                  aria-label="Dashboard"
+                  onClick={onDashboardClick}
+                  className={`relative z-10 flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
+                    isDashboard
+                      ? "text-green-300"
+                      : "text-white/70 hover:text-white"
+                  }`}
+                >
+                  <User className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Logout Button */}
               <button
                 type="button"
-                title={isLogoutLoading ? "Logging out..." : "Logout"}
+                title="Logout"
                 aria-label="Logout"
-                className="flex items-center justify-center p-1.5 text-white/70 transition-colors hover:text-red-400 disabled:opacity-50"
-                onClick={handleLogout}
-                disabled={isLogoutLoading}
+                className="flex h-9 w-9 items-center justify-center rounded-full text-white/70 transition-colors hover:text-red-400"
+                onClick={onRequestLogout}
               >
                 <LogOut className="h-5 w-5" />
               </button>
-            </>
+            </div>
           ) : (
             <>
               <button
