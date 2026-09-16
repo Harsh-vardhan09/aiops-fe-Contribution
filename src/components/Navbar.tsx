@@ -59,11 +59,10 @@ export default function Navbar({
                 type="button"
                 title={isDashboard ? "Dashboard (Current)" : "Dashboard"}
                 aria-label="Dashboard"
-                className={`flex items-center justify-center p-1.5 transition-colors ${
-                  isDashboard
+                className={`flex items-center justify-center p-1.5 transition-colors ${isDashboard
                     ? "text-green-400 cursor-default"
                     : "text-white/70 hover:text-green-400"
-                }`}
+                  }`}
                 onClick={onDashboardClick}
               >
                 <User className={`h-5 w-5 ${isDashboard ? "fill-current" : ""}`} />
@@ -88,7 +87,7 @@ export default function Navbar({
                 Login
               </button>
               <button
-                className="rounded-lg border border-transparent bg-green-400 px-3.5 py-2 text-sm font-medium text-black transition-colors hover:bg-green-300"
+                className="rounded-lg border border bg-green-400 px-3.5 py-2 text-sm font-medium text-black transition-colors hover:bg-green-300"
                 onClick={() => onAuthClick?.("signup")}
               >
                 Sign Up

@@ -81,7 +81,7 @@ export default function Landing({
             <div className="mt-6 flex flex-wrap gap-3">
               <button
                 onClick={() => onAuthClick("signup")}
-                className="rounded-lg bg-green-400 px-5 py-2.5 text-sm font-medium text-black transition-colors hover:bg-green-300"
+                className="rounded-lg border border bg-green-400 px-5 py-2.5 text-sm font-medium text-black transition-colors hover:bg-green-300"
               >
                 Get a demo
               </button>
@@ -158,7 +158,7 @@ export default function Landing({
 
           <button
             onClick={() => onAuthClick("signup")}
-            className="mt-6 rounded-lg bg-green-400 px-6 py-2.5 text-sm font-medium text-black transition-colors hover:bg-green-300"
+            className="mt-6 rounded-lg border border-transparent bg-green-400 px-6 py-2.5 text-sm font-medium text-black transition-colors hover:bg-green-300"
           >
             Start your free trial
           </button>
