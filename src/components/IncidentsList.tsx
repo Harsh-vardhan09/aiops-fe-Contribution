@@ -10,6 +10,7 @@ import {
   Siren,
   User,
   Lightbulb,
+  Radio,
 } from "lucide-react";
 
 type Analysis = {
@@ -80,6 +81,7 @@ export default function IncidentsList() {
     return (
       <section className="w-full rounded-2xl border border-white/20 overflow-hidden bg-black p-6 sm:p-8">
         <span className="inline-flex items-center gap-2 rounded-lg bg-green-400/15 px-3 py-1.5 text-xs text-green-300 ring-1 ring-green-400/25">
+          <Radio className="h-3.5 w-3.5 text-green-400" />
           Live Monitoring
         </span>
         <h2 className="mt-4 font-mono text-2xl font-bold uppercase leading-[1.15] tracking-tight text-white sm:text-3xl">
@@ -93,6 +95,7 @@ export default function IncidentsList() {
   return (
     <section className="w-full rounded-2xl border border-white/20 overflow-hidden bg-black p-6 sm:p-8">
       <span className="inline-flex items-center gap-2 rounded-lg bg-green-400/15 px-3 py-1.5 text-xs text-green-300 ring-1 ring-green-400/25">
+        <Radio className="h-3.5 w-3.5 text-green-400" />
         Live Monitoring
       </span>
 
@@ -139,7 +142,7 @@ export default function IncidentsList() {
               </div>
 
               <button
-                className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 px-4 py-2 font-mono text-xs uppercase tracking-wide text-white transition-colors hover:bg-white/10 disabled:opacity-50"
+                className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10 hover:border-white/30 disabled:opacity-50"
                 onClick={async () => {
                   try {
                     setAnalyzingId(incident.id);

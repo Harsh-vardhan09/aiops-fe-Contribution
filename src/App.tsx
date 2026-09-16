@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "./lib/supabase";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Landing from "./pages/Landing";
+import Navbar from "./components/Navbar";
 
 type PageState = "landing" | "auth" | "dashboard";
 
@@ -10,25 +11,32 @@ export default function App() {
   const [session, setSession] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState<PageState>("landing");
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+  const [isSignOutMenuOpen, setIsSignOutMenuOpen] = useState(false);
+  const [isPillarPaused, setIsPillarPaused] = useState(false);
   const [loading, setLoading] = useState(true);
+  const navTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (navTimeoutRef.current) clearTimeout(navTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     // Load last visited page from localStorage
     const lastPage = localStorage.getItem("lastPage") as PageState | null;
-    
+
     supabase.auth
       .getSession()
       .then(({ data }) => {
         setSession(data?.session ?? null);
-        
+
         // If user is logged in
         if (data?.session) {
-          // Go to the last page they were on, or dashboard if no previous page
-          const pageToLoad = (lastPage && lastPage !== "auth") ? lastPage : "dashboard";
+          const pageToLoad = lastPage && lastPage !== "auth" ? lastPage : "dashboard";
           setCurrentPage(pageToLoad);
           localStorage.setItem("lastPage", pageToLoad);
         } else {
-          // If not logged in, show landing
           setCurrentPage("landing");
           if (lastPage && lastPage !== "auth") {
             localStorage.setItem("lastPage", "landing");
@@ -47,13 +55,11 @@ export default function App() {
     try {
       const response = supabase.auth.onAuthStateChange((_e, session) => {
         setSession(session);
-        
+
         if (session) {
-          // When user logs in, go to dashboard
           setCurrentPage("dashboard");
           localStorage.setItem("lastPage", "dashboard");
         } else {
-          // When user logs out, go to landing
           setCurrentPage("landing");
           localStorage.setItem("lastPage", "landing");
         }
@@ -69,12 +75,35 @@ export default function App() {
   }, []);
 
   const handleNavigateToPage = (page: PageState, mode?: "login" | "signup") => {
-    setCurrentPage(page);
-    if (mode) setAuthMode(mode);
-    localStorage.setItem("lastPage", page);
+    if (navTimeoutRef.current) {
+      clearTimeout(navTimeoutRef.current);
+      navTimeoutRef.current = null;
+    }
+
+    if (currentPage === "landing" && page !== "landing") {
+      // First pause the lightpillar animation, then transition to target page
+      setIsPillarPaused(true);
+      if (mode) setAuthMode(mode);
+
+      navTimeoutRef.current = window.setTimeout(() => {
+        setCurrentPage(page);
+        localStorage.setItem("lastPage", page);
+        setIsPillarPaused(false);
+        navTimeoutRef.current = null;
+      }, 150);
+    } else {
+      setCurrentPage(page);
+      if (mode) setAuthMode(mode);
+      localStorage.setItem("lastPage", page);
+    }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn("Supabase signOut error:", err);
+    }
     setSession(null);
     setCurrentPage("landing");
     localStorage.removeItem("lastPage");
@@ -88,34 +117,68 @@ export default function App() {
     );
   }
 
+  const isModalOpen = currentPage === "auth";
+
   return (
-    <div key={currentPage} className="animate-fade-swift min-h-screen bg-black">
-      {currentPage === "landing" && (
-        <Landing
-          session={session}
-          onAuthClick={(mode) => handleNavigateToPage("auth", mode)}
-          onDashboardClick={() => handleNavigateToPage("dashboard")}
-        />
-      )}
+    <div className="relative min-h-screen flex flex-col bg-black">
+      {/* Underlying layout and page content */}
+      <div
+        key={session ? "auth-session" : "guest-session"}
+        className={`flex-1 flex flex-col page-blur-transition ${isModalOpen ? "page-blurred" : "page-unblurred"
+          }`}
+      >
+        <main className="min-h-screen flex-1 flex flex-col bg-black text-white py-6">
+          <div className="mx-auto w-full max-w-[920px] px-4 flex flex-col flex-1 gap-6">
+            <Navbar
+              session={session}
+              onAuthClick={(mode) => handleNavigateToPage("auth", mode)}
+              onDashboardClick={() => {
+                if (!session) {
+                  handleNavigateToPage("auth", "login");
+                } else {
+                  handleNavigateToPage("dashboard");
+                }
+              }}
+              onHomeClick={() => handleNavigateToPage("landing")}
+              onLogoClick={() => handleNavigateToPage("landing")}
+              onLogout={handleLogout}
+              onMenuOpenChange={setIsSignOutMenuOpen}
+              currentPage={currentPage === "dashboard" ? "dashboard" : "landing"}
+            />
+
+            {currentPage === "dashboard" && session ? (
+              <div
+                key="dashboard-content"
+                className={`flex flex-col flex-1 gap-6 animate-fade-swift page-blur-transition ${isSignOutMenuOpen ? "page-blurred" : "page-unblurred"
+                  }`}
+              >
+                <Dashboard />
+              </div>
+            ) : (
+              <div
+                key="landing-content"
+                className={`flex flex-col flex-1 gap-6 animate-fade-swift page-blur-transition ${isSignOutMenuOpen ? "page-blurred" : "page-unblurred"
+                  }`}
+              >
+                <Landing
+                  session={session}
+                  onAuthClick={(mode) => handleNavigateToPage("auth", mode)}
+                  onDashboardClick={() => handleNavigateToPage("dashboard")}
+                  paused={isSignOutMenuOpen || isModalOpen || isPillarPaused}
+                />
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+
+      {/* Auth card overlay floating above */}
       {currentPage === "auth" && (
         <Auth
-          onNavigateHome={() => handleNavigateToPage("landing")}
+          onNavigateHome={() => handleNavigateToPage(session ? "dashboard" : "landing")}
           initialMode={authMode}
         />
       )}
-      {currentPage === "dashboard" &&
-        (session ? (
-          <Dashboard
-            session={session}
-            onNavigateHome={() => handleNavigateToPage("landing")}
-            onLogout={handleLogout}
-          />
-        ) : (
-          <Auth
-            onNavigateHome={() => handleNavigateToPage("landing")}
-            initialMode={authMode}
-          />
-        ))}
     </div>
   );
 }

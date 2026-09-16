@@ -1,18 +1,9 @@
 import { useState } from "react";
-import Navbar from "../components/Navbar";
 import { createProject } from "../api/backend";
 import IncidentsList from "../components/IncidentsList";
-import { CheckCircle2, Check } from "lucide-react";
+import { CheckCircle2, Check, Bolt } from "lucide-react";
 
-function Dashboard({ 
-  session: initialSession,
-  onNavigateHome,
-  onLogout,
-}: { 
-  session: any;
-  onNavigateHome: () => void;
-  onLogout?: () => void;
-}) {
+export default function Dashboard() {
   const [project, setProject] = useState<any | null>(null);
   const [projectName, setProjectName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,50 +15,34 @@ function Dashboard({
       setError("Please enter a project name");
       return;
     }
-
     setLoading(true);
     setError(null);
-
     try {
-      const res = await createProject(projectName);
-      if (res.error) {
-        setError(res.error);
-      } else {
-        setProject(res);
-        setProjectName("");
-      }
-    } catch (err: any) {
-      setError(err.message || "Failed to create project");
+      const p = await createProject(projectName);
+      setProject(p);
+      setProjectName("");
+    } catch (e: any) {
+      console.error("Project creation failed", e);
+      setError(e?.message || "Failed to create project");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCopyApiKey = async () => {
-    if (!project?.api_key) return;
-    
-    try {
-      await navigator.clipboard.writeText(project.api_key);
-      setCopyFeedback("Copied to clipboard!");
-      setTimeout(() => setCopyFeedback(null), 2000);
-    } catch (err) {
-      setCopyFeedback("Failed to copy");
+  const handleCopyApiKey = () => {
+    if (project?.api_key) {
+      navigator.clipboard.writeText(project.api_key);
+      setCopyFeedback("Copied!");
       setTimeout(() => setCopyFeedback(null), 2000);
     }
   };
 
   return (
-    <main className="min-h-screen bg-black text-white py-6">
-      <div className="mx-auto w-full max-w-[920px] px-4 flex flex-col gap-6">
-        <Navbar
-          session={initialSession}
-          onLogoClick={onNavigateHome}
-          onLogout={onLogout}
-        />
-
-        {/* Create Project Section */}
+    <>
+      {/* Create Project Section */}
         <section className="w-full rounded-2xl border border-white/20 overflow-hidden bg-black p-6 sm:p-8">
           <span className="inline-flex items-center gap-2 rounded-lg bg-green-400/15 px-3 py-1.5 text-xs text-green-300 ring-1 ring-green-400/25">
+            <Bolt className="h-3.5 w-3.5 text-green-400" />
             Project Setup
           </span>
 
@@ -99,10 +74,10 @@ function Dashboard({
                 className="w-full rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-sm transition-colors placeholder:text-white/30 focus:border-green-400/50 focus:bg-white/10 focus:outline-none"
               />
             </div>
-            <button 
+            <button
               onClick={handleCreateProject}
               disabled={loading}
-              className="rounded-lg bg-green-400 px-6 py-3 font-mono text-sm font-medium uppercase tracking-wide text-black transition-colors hover:bg-green-300 disabled:opacity-50"
+              className="rounded-lg border bg-green-400 px-5 py-3 text-sm font-medium text-black transition-colors hover:bg-green-300 disabled:opacity-50"
             >
               {loading ? "Creating..." : "Create"}
             </button>
@@ -156,12 +131,9 @@ function Dashboard({
         <IncidentsList />
 
         {/* Footer */}
-        <footer className="w-full rounded-2xl border border-white/15 py-6 text-center text-xs sm:text-sm text-white/60 mb-6">
+        <footer className="mt-auto w-full rounded-2xl border border-white/15 py-6 text-center text-xs sm:text-sm text-white/60">
           <p>&copy; 2026 AI Ops. All rights reserved.</p>
         </footer>
-      </div>
-    </main>
+    </>
   );
 }
-
-export default Dashboard;

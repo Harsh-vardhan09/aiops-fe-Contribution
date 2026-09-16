@@ -3,10 +3,10 @@ import { supabase } from "../lib/supabase";
 import Logo from "../components/Logo";
 import { ArrowLeft } from "lucide-react";
 
-export default function Auth({ 
+export default function Auth({
   onNavigateHome,
   initialMode = "login"
-}: { 
+}: {
   onNavigateHome: () => void;
   initialMode?: "login" | "signup";
 }) {
@@ -20,10 +20,10 @@ export default function Auth({
     e.preventDefault();
     setLoading(true);
     setMessage(null);
-    
+
     const { error } = await supabase.auth.signUp({ email, password });
     setLoading(false);
-    
+
     if (error) {
       setMessage({ type: "error", text: error.message });
     } else {
@@ -37,13 +37,13 @@ export default function Auth({
     e.preventDefault();
     setLoading(true);
     setMessage(null);
-    
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
     setLoading(false);
-    
+
     if (error) {
       setMessage({ type: "error", text: error.message });
     } else {
@@ -55,11 +55,16 @@ export default function Auth({
     "w-full rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-sm transition-colors placeholder:text-white/30 focus:border-green-400/50 focus:bg-white/10 focus:outline-none";
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black px-5 py-12">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-5 py-12 bg-black/60 backdrop-blur-md animate-fade-swift"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onNavigateHome();
+      }}
+    >
       {/* ambient green glow */}
       <div className="pointer-events-none absolute left-1/2 top-1/2 h-[38rem] w-[38rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-green-400/10 blur-[120px]" />
 
-      <div className="relative w-full max-w-md rounded-2xl border border-white/15 bg-white/[0.04] p-8 backdrop-blur-xl sm:p-10 animate-scale-up">
+      <div className="relative w-full max-w-md rounded-2xl border border-white/15 bg-black/30 p-8 backdrop-blur-2xl sm:p-10 animate-scale-up shadow-2xl">
         <button
           type="button"
           onClick={onNavigateHome}
@@ -75,18 +80,17 @@ export default function Auth({
             {isSignUp ? "Create account" : "Welcome back"}
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-white/50">
-            {isSignUp 
-              ? "Sign up to start managing incidents intelligently" 
+            {isSignUp
+              ? "Sign up to start managing incidents intelligently"
               : "Login to your AI Ops account"}
           </p>
 
           {message && (
             <div
-              className={`mt-6 rounded-lg border px-4 py-3 text-sm ${
-                message.type === "error"
-                  ? "border-red-400/25 bg-red-400/10 text-red-300"
-                  : "border-green-400/25 bg-green-400/10 text-green-300"
-              }`}
+              className={`mt-6 rounded-lg border px-4 py-3 text-sm ${message.type === "error"
+                ? "border-red-400/25 bg-red-400/10 text-red-300"
+                : "border-green-400/25 bg-green-400/10 text-green-300"
+                }`}
             >
               {message.text}
             </div>
@@ -121,10 +125,10 @@ export default function Auth({
               />
             </div>
 
-            <button 
+            <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-green-400 px-6 py-3 font-mono text-sm font-medium uppercase tracking-wide text-black transition-colors hover:bg-green-300 disabled:opacity-50"
+              className="w-full rounded-lg bg-green-400 px-4 py-2.5 text-sm font-medium text-black transition-colors hover:bg-green-300 disabled:opacity-50"
             >
               {loading ? "Loading..." : (isSignUp ? "Create Account" : "Login")}
             </button>
@@ -145,6 +149,6 @@ export default function Auth({
           </p>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
