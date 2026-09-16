@@ -123,7 +123,7 @@ export default function App() {
             {currentPage === "dashboard" && session ? (
               <div
                 key="dashboard-content"
-                className={`animate-fade-swift page-blur-transition ${isSignOutMenuOpen ? "page-blurred" : "page-unblurred"
+                className={`flex flex-col gap-6 animate-fade-swift page-blur-transition ${isSignOutMenuOpen ? "page-blurred" : "page-unblurred"
                   }`}
               >
                 <Dashboard />
@@ -131,7 +131,7 @@ export default function App() {
             ) : (
               <div
                 key="landing-content"
-                className={`animate-fade-swift page-blur-transition ${isSignOutMenuOpen ? "page-blurred" : "page-unblurred"
+                className={`flex flex-col gap-6 animate-fade-swift page-blur-transition ${isSignOutMenuOpen ? "page-blurred" : "page-unblurred"
                   }`}
               >
                 <Landing
