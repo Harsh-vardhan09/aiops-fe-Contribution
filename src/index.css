@@ -97,3 +97,8 @@ input:disabled {
 .page-unblurred {
   filter: blur(0px) brightness(1);
 }
+
+.navbar-blur-60 {
+  backdrop-filter: blur(60px);
+  -webkit-backdrop-filter: blur(60px);
+}
