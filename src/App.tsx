@@ -89,32 +89,56 @@ export default function App() {
   }
 
   return (
-    <div key={currentPage} className="animate-fade-swift min-h-screen bg-black">
-      {currentPage === "landing" && (
-        <Landing
-          session={session}
-          onAuthClick={(mode) => handleNavigateToPage("auth", mode)}
-          onDashboardClick={() => handleNavigateToPage("dashboard")}
-        />
+    <div className="relative min-h-screen bg-black">
+      {/* Landing page in background */}
+      {(currentPage === "landing" || currentPage === "auth") && (
+        <div
+          className={`transition-all duration-300 ${
+            currentPage === "auth"
+              ? "filter blur-[6px] brightness-75 pointer-events-none select-none"
+              : ""
+          }`}
+        >
+          <Landing
+            session={session}
+            onAuthClick={(mode) => handleNavigateToPage("auth", mode)}
+            onDashboardClick={() => handleNavigateToPage("dashboard")}
+          />
+        </div>
       )}
+
+      {/* Auth card overlay floating above landing */}
       {currentPage === "auth" && (
         <Auth
           onNavigateHome={() => handleNavigateToPage("landing")}
           initialMode={authMode}
         />
       )}
+
+      {/* Dashboard page */}
       {currentPage === "dashboard" &&
         (session ? (
-          <Dashboard
-            session={session}
-            onNavigateHome={() => handleNavigateToPage("landing")}
-            onLogout={handleLogout}
-          />
+          <div className="animate-fade-swift">
+            <Dashboard
+              session={session}
+              onNavigateHome={() => handleNavigateToPage("landing")}
+              onLogout={handleLogout}
+            />
+          </div>
         ) : (
-          <Auth
-            onNavigateHome={() => handleNavigateToPage("landing")}
-            initialMode={authMode}
-          />
+          <div className="relative">
+            <div className="filter blur-[6px] brightness-75 pointer-events-none select-none">
+              <Landing
+                session={session}
+                onAuthClick={(mode) => handleNavigateToPage("auth", mode)}
+                onDashboardClick={() => handleNavigateToPage("dashboard")}
+              />
+            </div>
+            <Auth
+              onNavigateHome={() => handleNavigateToPage("landing")}
+              initialMode={authMode}
+            />
+          </div>
         ))}
     </div>
   );
