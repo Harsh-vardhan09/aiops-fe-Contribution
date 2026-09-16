@@ -10,6 +10,7 @@ import {
   Siren,
   User,
   Lightbulb,
+  Radio,
 } from "lucide-react";
 
 type Analysis = {
@@ -80,6 +81,7 @@ export default function IncidentsList() {
     return (
       <section className="w-full rounded-2xl border border-white/20 overflow-hidden bg-black p-6 sm:p-8">
         <span className="inline-flex items-center gap-2 rounded-lg bg-green-400/15 px-3 py-1.5 text-xs text-green-300 ring-1 ring-green-400/25">
+          <Radio className="h-3.5 w-3.5 text-green-400" />
           Live Monitoring
         </span>
         <h2 className="mt-4 font-mono text-2xl font-bold uppercase leading-[1.15] tracking-tight text-white sm:text-3xl">
@@ -93,6 +95,7 @@ export default function IncidentsList() {
   return (
     <section className="w-full rounded-2xl border border-white/20 overflow-hidden bg-black p-6 sm:p-8">
       <span className="inline-flex items-center gap-2 rounded-lg bg-green-400/15 px-3 py-1.5 text-xs text-green-300 ring-1 ring-green-400/25">
+        <Radio className="h-3.5 w-3.5 text-green-400" />
         Live Monitoring
       </span>
 

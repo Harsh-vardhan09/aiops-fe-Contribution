@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
 import Logo from "./Logo";
+import { User, LogOut } from "lucide-react";
 
 export default function Navbar({
   session,
@@ -8,6 +9,7 @@ export default function Navbar({
   onDashboardClick,
   onLogoClick,
   onLogout,
+  currentPage = "landing",
 }: {
   session: any;
   onAuthClick?: (mode: "login" | "signup") => void;
@@ -16,6 +18,7 @@ export default function Navbar({
   /** Defaults to scrolling to the top of the current page. */
   onLogoClick?: () => void;
   onLogout?: () => void;
+  currentPage?: "landing" | "dashboard";
 }) {
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
 
@@ -31,6 +34,8 @@ export default function Navbar({
       setIsLogoutLoading(false);
     }
   };
+
+  const isDashboard = currentPage === "dashboard" || !onDashboardClick;
 
   return (
     <nav className="w-full rounded-2xl border border-white/20 bg-black/60 px-4 py-3 sm:px-6">
@@ -50,20 +55,28 @@ export default function Navbar({
               <span className="hidden text-sm text-white/60 sm:inline">
                 {session.user?.email}
               </span>
-              {onDashboardClick && (
-                <button
-                  className="rounded-lg border border-green-400/30 px-4 py-2 text-sm font-medium text-green-200 transition-colors hover:bg-green-500/30 hover:text-white"
-                  onClick={onDashboardClick}
-                >
-                  Dashboard
-                </button>
-              )}
               <button
-                className="rounded-lg border border-red-500/35 px-4 py-2 text-sm font-medium text-red-300 transition-colors hover:bg-red-500/30 hover:text-white disabled:opacity-50"
+                type="button"
+                title={isDashboard ? "Dashboard (Current)" : "Dashboard"}
+                aria-label="Dashboard"
+                className={`flex items-center justify-center p-1.5 transition-colors ${
+                  isDashboard
+                    ? "text-green-400 cursor-default"
+                    : "text-white/70 hover:text-green-400"
+                }`}
+                onClick={onDashboardClick}
+              >
+                <User className={`h-5 w-5 ${isDashboard ? "fill-current" : ""}`} />
+              </button>
+              <button
+                type="button"
+                title={isLogoutLoading ? "Logging out..." : "Logout"}
+                aria-label="Logout"
+                className="flex items-center justify-center p-1.5 text-white/70 transition-colors hover:text-red-400 disabled:opacity-50"
                 onClick={handleLogout}
                 disabled={isLogoutLoading}
               >
-                {isLogoutLoading ? "Logging out..." : "Logout"}
+                <LogOut className="h-5 w-5" />
               </button>
             </>
           ) : (

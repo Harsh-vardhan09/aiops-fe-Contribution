@@ -58,6 +58,7 @@ export default function Landing({
           session={session}
           onAuthClick={onAuthClick}
           onDashboardClick={onDashboardClick}
+          currentPage="landing"
         />
 
         {/* Hero */}
