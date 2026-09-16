@@ -138,6 +138,7 @@ export default function App() {
                   session={session}
                   onAuthClick={(mode) => handleNavigateToPage("auth", mode)}
                   onDashboardClick={() => handleNavigateToPage("dashboard")}
+                  paused={isSignOutMenuOpen || isModalOpen}
                 />
               </div>
             )}

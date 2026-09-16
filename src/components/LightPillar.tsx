@@ -16,6 +16,7 @@ interface LightPillarProps {
   pillarRotation?: number;
   quality?: 'low' | 'medium' | 'high';
   lightMode?: boolean;
+  paused?: boolean;
 }
 
 const LightPillar: React.FC<LightPillarProps> = ({
@@ -32,7 +33,8 @@ const LightPillar: React.FC<LightPillarProps> = ({
   mixBlendMode = 'screen',
   pillarRotation = 0,
   quality = 'high',
-  lightMode = false
+  lightMode = false,
+  paused = false
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
@@ -44,7 +46,12 @@ const LightPillar: React.FC<LightPillarProps> = ({
   const mouseRef = useRef<THREE.Vector2>(new THREE.Vector2(0, 0));
   const timeRef = useRef(0);
   const rotationSpeedRef = useRef(rotationSpeed);
+  const pausedRef = useRef(paused);
   const [webGLSupported, setWebGLSupported] = useState<boolean>(true);
+
+  useEffect(() => {
+    pausedRef.current = paused;
+  }, [paused]);
 
   // Check WebGL support
   useEffect(() => {
@@ -290,8 +297,36 @@ const fragmentShader = `
     const targetFPS = effectiveQuality === 'low' ? 30 : 60;
     const frameTime = 1000 / targetFPS;
 
+    // Intersection & visibility tracking to eliminate offscreen GPU compute
+    let isVisible = true;
+    const intersectionObserver = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          isVisible = entry.isIntersecting;
+        }
+      },
+      { threshold: 0 }
+    );
+    intersectionObserver.observe(container);
+
+    let isDocumentVisible = !document.hidden;
+    const handleVisibilityChange = () => {
+      isDocumentVisible = !document.hidden;
+      if (isDocumentVisible) {
+        lastTime = performance.now();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     const animate = (currentTime: number) => {
       if (!materialRef.current || !rendererRef.current || !sceneRef.current || !cameraRef.current) return;
+
+      // Only render when visible in display, tab active, and not paused
+      if (!isVisible || !isDocumentVisible || pausedRef.current) {
+        lastTime = currentTime;
+        rafRef.current = requestAnimationFrame(animate);
+        return;
+      }
 
       const elapsed = currentTime - lastTime;
 
@@ -327,6 +362,8 @@ const fragmentShader = `
 
     // Cleanup
     return () => {
+      intersectionObserver.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       resizeObserver.disconnect();
       if (interactive) {
         container.removeEventListener('mousemove', handleMouseMove);
