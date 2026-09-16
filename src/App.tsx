@@ -13,6 +13,7 @@ export default function App() {
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [isSignOutMenuOpen, setIsSignOutMenuOpen] = useState(false);
   const [isPillarPaused, setIsPillarPaused] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const navTimeoutRef = useRef<number | null>(null);
 
@@ -20,6 +21,16 @@ export default function App() {
     return () => {
       if (navTimeoutRef.current) clearTimeout(navTimeoutRef.current);
     };
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
@@ -127,38 +138,53 @@ export default function App() {
         className={`flex-1 flex flex-col page-blur-transition ${isModalOpen ? "page-blurred" : "page-unblurred"
           }`}
       >
-        <main className="min-h-screen flex-1 flex flex-col bg-black text-white py-6">
-          <div className="mx-auto w-full max-w-[920px] px-4 flex flex-col flex-1 gap-6">
-            <Navbar
-              session={session}
-              onAuthClick={(mode) => handleNavigateToPage("auth", mode)}
-              onDashboardClick={() => {
-                if (!session) {
-                  handleNavigateToPage("auth", "login");
-                } else {
-                  handleNavigateToPage("dashboard");
-                }
-              }}
-              onHomeClick={() => handleNavigateToPage("landing")}
-              onLogoClick={() => handleNavigateToPage("landing")}
-              onLogout={handleLogout}
-              onMenuOpenChange={setIsSignOutMenuOpen}
-              currentPage={currentPage === "dashboard" ? "dashboard" : "landing"}
-            />
+        <main className="min-h-screen flex-1 flex flex-col bg-black text-white pb-6">
+          {/* Sticky Header Layer */}
+          <header className="sticky top-0 z-40 w-full flex justify-center pointer-events-none">
+            <div
+              className={`w-full flex justify-center pointer-events-auto transition-all duration-300 ease-out ${
+                isScrolled
+                  ? "max-w-full sm:max-w-[990px] px-0 sm:px-4 pt-0 sm:pt-3"
+                  : "max-w-[920px] px-4 pt-4 sm:pt-6"
+              }`}
+            >
+              <Navbar
+                session={session}
+                isScrolled={isScrolled}
+                onAuthClick={(mode) => handleNavigateToPage("auth", mode)}
+                onDashboardClick={() => {
+                  if (!session) {
+                    handleNavigateToPage("auth", "login");
+                  } else {
+                    handleNavigateToPage("dashboard");
+                  }
+                }}
+                onHomeClick={() => handleNavigateToPage("landing")}
+                onLogoClick={() => handleNavigateToPage("landing")}
+                onLogout={handleLogout}
+                onMenuOpenChange={setIsSignOutMenuOpen}
+                currentPage={currentPage === "dashboard" ? "dashboard" : "landing"}
+              />
+            </div>
+          </header>
 
+          {/* Page Content Container */}
+          <div className="mx-auto w-full max-w-[920px] px-4 flex flex-col flex-1 gap-6 pt-4 sm:pt-5">
             {currentPage === "dashboard" && session ? (
               <div
                 key="dashboard-content"
-                className={`flex flex-col flex-1 gap-6 animate-fade-swift page-blur-transition ${isSignOutMenuOpen ? "page-blurred" : "page-unblurred"
-                  }`}
+                className={`flex flex-col flex-1 gap-6 animate-fade-swift page-blur-transition ${
+                  isSignOutMenuOpen ? "page-blurred" : "page-unblurred"
+                }`}
               >
                 <Dashboard />
               </div>
             ) : (
               <div
                 key="landing-content"
-                className={`flex flex-col flex-1 gap-6 animate-fade-swift page-blur-transition ${isSignOutMenuOpen ? "page-blurred" : "page-unblurred"
-                  }`}
+                className={`flex flex-col flex-1 gap-6 animate-fade-swift page-blur-transition ${
+                  isSignOutMenuOpen ? "page-blurred" : "page-unblurred"
+                }`}
               >
                 <Landing
                   session={session}

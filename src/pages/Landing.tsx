@@ -158,7 +158,7 @@ export default function Landing({
       </section>
 
       {/* How It Works & Operational Deep Dive */}
-      <section id="learn-more" className="scroll-mt-4 w-full rounded-2xl border border-white/20 overflow-hidden bg-black p-6 sm:p-8">
+      <section id="learn-more" className="scroll-mt-24 w-full rounded-2xl border border-white/20 overflow-hidden bg-black p-6 sm:p-8">
         <span className="inline-flex items-center rounded-lg bg-green-400/15 px-3 py-1.5 text-xs text-green-300 ring-1 ring-green-400/25">
           Intelligent Operations Workflow
         </span>

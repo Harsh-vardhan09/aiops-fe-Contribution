@@ -4,6 +4,7 @@ import { Home, User, LogOut } from "lucide-react";
 
 export default function Navbar({
   session,
+  isScrolled = false,
   onAuthClick,
   onDashboardClick,
   onHomeClick,
@@ -13,6 +14,7 @@ export default function Navbar({
   currentPage = "landing",
 }: {
   session: any;
+  isScrolled?: boolean;
   onAuthClick?: (mode: "login" | "signup") => void;
   onDashboardClick?: () => void;
   onHomeClick?: () => void;
@@ -70,7 +72,11 @@ export default function Navbar({
   return (
     <nav
       ref={navRef}
-      className="relative w-full rounded-2xl border border-white/20 bg-black/60 px-4 py-3 sm:px-6"
+      className={`relative w-full navbar-blur-60 transition-all duration-300 ease-out ${
+        isScrolled
+          ? "rounded-none border-b border-white/20 border-t-0 border-x-0 bg-black/75 px-4 py-4 shadow-xl sm:rounded-2xl sm:border sm:border-white/20 sm:px-6 sm:py-4 sm:shadow-2xl"
+          : "rounded-2xl border border-white/20 bg-black/60 px-4 py-3 sm:px-6 shadow-none"
+      }`}
     >
       <div className="flex w-full flex-wrap items-center justify-between gap-3">
         <button
@@ -173,7 +179,7 @@ export default function Navbar({
 
       {/* Dropdown Menu Item aligned to the edge of the navbar */}
       {logoutMenuOpen && (
-        <div className="absolute right-0 top-[calc(100%+0.25rem)] z-50 animate-drop-down">
+        <div className={`absolute top-[calc(100%+0.35rem)] z-50 animate-drop-down ${isScrolled ? "right-3 sm:right-0" : "right-0"}`}>
           <button
             type="button"
             onClick={() => {
