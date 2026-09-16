@@ -64,7 +64,7 @@ export default function Landing({
         <section className="relative w-full rounded-2xl border border-white/20 overflow-hidden bg-black flex flex-col lg:flex-row min-h-[460px]">
           <div className="flex-1 p-6 sm:p-8 lg:p-10 flex flex-col justify-center z-10">
             <span className="inline-flex items-center gap-2 self-start rounded-lg bg-green-400/15 py-1.5 px-3 text-xs text-green-300 ring-1 ring-green-400/25">
-              The NO.1 AI-driven platform for intelligent operations
+              The No.1 AI-driven platform for intelligent operations
             </span>
 
             <h1 className="mt-4 font-mono text-2xl font-bold uppercase leading-[1.15] tracking-tight text-white sm:text-3xl lg:text-4xl">
@@ -80,12 +80,12 @@ export default function Landing({
             <div className="mt-6 flex flex-wrap gap-3">
               <button
                 onClick={() => onAuthClick("signup")}
-                className="rounded-lg bg-green-400 px-6 py-3 font-mono text-sm font-medium uppercase tracking-wide text-black transition-colors hover:bg-green-300"
+                className="rounded-lg bg-green-400 px-5 py-2.5 text-sm font-medium text-black transition-colors hover:bg-green-300"
               >
                 Get a demo
               </button>
 
-              <button className="rounded-lg border border-white/25 px-6 py-3 font-mono text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-white/10">
+              <button className="rounded-lg border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/10 hover:border-white/30">
                 Learn more
               </button>
             </div>
@@ -157,7 +157,7 @@ export default function Landing({
 
           <button
             onClick={() => onAuthClick("signup")}
-            className="mt-6 rounded-lg bg-green-400 px-8 py-3.5 font-mono text-sm font-medium uppercase tracking-wide text-black transition-colors hover:bg-green-300"
+            className="mt-6 rounded-lg bg-green-400 px-6 py-2.5 text-sm font-medium text-black transition-colors hover:bg-green-300"
           >
             Start your free trial
           </button>

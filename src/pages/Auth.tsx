@@ -124,7 +124,7 @@ export default function Auth({
             <button 
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-green-400 px-6 py-3 font-mono text-sm font-medium uppercase tracking-wide text-black transition-colors hover:bg-green-300 disabled:opacity-50"
+              className="w-full rounded-lg bg-green-400 px-4 py-2.5 text-sm font-medium text-black transition-colors hover:bg-green-300 disabled:opacity-50"
             >
               {loading ? "Loading..." : (isSignUp ? "Create Account" : "Login")}
             </button>

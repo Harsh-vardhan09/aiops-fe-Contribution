@@ -32,9 +32,6 @@ export default function Navbar({
     }
   };
 
-  const btn =
-    "rounded-lg px-4 py-2 border border-white/15 text-sm font-medium text-white transition-colors hover:bg-white/10 disabled:opacity-50";
-
   return (
     <nav className="w-full rounded-2xl border border-white/20 bg-black/60 px-4 py-3 sm:px-6">
       <div className="flex w-full flex-wrap items-center justify-between gap-3">
@@ -54,12 +51,15 @@ export default function Navbar({
                 {session.user?.email}
               </span>
               {onDashboardClick && (
-                <button className={btn} onClick={onDashboardClick}>
+                <button
+                  className="rounded-lg border border-green-400/30 px-4 py-2 text-sm font-medium text-green-200 transition-colors hover:bg-green-500/30 hover:text-white"
+                  onClick={onDashboardClick}
+                >
                   Dashboard
                 </button>
               )}
               <button
-                className={btn}
+                className="rounded-lg border border-red-500/35 px-4 py-2 text-sm font-medium text-red-300 transition-colors hover:bg-red-500/30 hover:text-white disabled:opacity-50"
                 onClick={handleLogout}
                 disabled={isLogoutLoading}
               >
@@ -68,11 +68,14 @@ export default function Navbar({
             </>
           ) : (
             <>
-              <button className={btn} onClick={() => onAuthClick?.("login")}>
+              <button
+                className="rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10 hover:border-white/30"
+                onClick={() => onAuthClick?.("login")}
+              >
                 Login
               </button>
               <button
-                className="rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-black transition-colors hover:bg-white/90"
+                className="rounded-lg border border-transparent bg-green-400 px-3.5 py-2 text-sm font-medium text-black transition-colors hover:bg-green-300"
                 onClick={() => onAuthClick?.("signup")}
               >
                 Sign Up

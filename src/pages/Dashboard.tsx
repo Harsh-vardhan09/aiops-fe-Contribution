@@ -102,7 +102,7 @@ function Dashboard({
             <button 
               onClick={handleCreateProject}
               disabled={loading}
-              className="rounded-lg bg-green-400 px-6 py-3 font-mono text-sm font-medium uppercase tracking-wide text-black transition-colors hover:bg-green-300 disabled:opacity-50"
+              className="rounded-lg bg-green-400 px-5 py-3 text-sm font-medium text-black transition-colors hover:bg-green-300 disabled:opacity-50"
             >
               {loading ? "Creating..." : "Create"}
             </button>
