@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "./lib/supabase";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -12,7 +12,15 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState<PageState>("landing");
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [isSignOutMenuOpen, setIsSignOutMenuOpen] = useState(false);
+  const [isPillarPaused, setIsPillarPaused] = useState(false);
   const [loading, setLoading] = useState(true);
+  const navTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (navTimeoutRef.current) clearTimeout(navTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     // Load last visited page from localStorage
@@ -67,9 +75,27 @@ export default function App() {
   }, []);
 
   const handleNavigateToPage = (page: PageState, mode?: "login" | "signup") => {
-    setCurrentPage(page);
-    if (mode) setAuthMode(mode);
-    localStorage.setItem("lastPage", page);
+    if (navTimeoutRef.current) {
+      clearTimeout(navTimeoutRef.current);
+      navTimeoutRef.current = null;
+    }
+
+    if (currentPage === "landing" && page !== "landing") {
+      // First pause the lightpillar animation, then transition to target page
+      setIsPillarPaused(true);
+      if (mode) setAuthMode(mode);
+
+      navTimeoutRef.current = window.setTimeout(() => {
+        setCurrentPage(page);
+        localStorage.setItem("lastPage", page);
+        setIsPillarPaused(false);
+        navTimeoutRef.current = null;
+      }, 150);
+    } else {
+      setCurrentPage(page);
+      if (mode) setAuthMode(mode);
+      localStorage.setItem("lastPage", page);
+    }
   };
 
   const handleLogout = async () => {
@@ -138,7 +164,7 @@ export default function App() {
                   session={session}
                   onAuthClick={(mode) => handleNavigateToPage("auth", mode)}
                   onDashboardClick={() => handleNavigateToPage("dashboard")}
-                  paused={isSignOutMenuOpen || isModalOpen}
+                  paused={isSignOutMenuOpen || isModalOpen || isPillarPaused}
                 />
               </div>
             )}

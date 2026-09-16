@@ -47,6 +47,7 @@ const LightPillar: React.FC<LightPillarProps> = ({
   const timeRef = useRef(0);
   const rotationSpeedRef = useRef(rotationSpeed);
   const pausedRef = useRef(paused);
+  pausedRef.current = paused;
   const [webGLSupported, setWebGLSupported] = useState<boolean>(true);
 
   useEffect(() => {
