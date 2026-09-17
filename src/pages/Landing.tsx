@@ -214,9 +214,9 @@ export default function Landing({
                   <h3 className="font-mono text-sm sm:text-base font-bold uppercase tracking-tight text-white">
                     {f.title}
                   </h3>
-                  <div className="mt-3 flex items-start gap-3.5">
-                    <div className="shrink-0 text-green-400">
-                      <Icon className="h-10 w-10 text-green-400 group-hover:scale-105 transition-transform duration-300" strokeWidth={1.5} />
+                  <div className="mt-4 sm:mt-5 flex items-center gap-4">
+                    <div className="text-green-400 shrink-0">
+                      <Icon className="h-8 w-8 sm:h-9 sm:w-9 text-green-400 group-hover:scale-105 transition-transform duration-300" strokeWidth={1.75} />
                     </div>
                     <p className="text-xs sm:text-sm leading-relaxed text-white/50">
                       {f.body}
@@ -292,47 +292,74 @@ export default function Landing({
         </div>
 
         {/* Deep Dive Breakdown Cards */}
-        <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 w-full">
-          <h3 className="font-mono text-sm sm:text-base font-bold uppercase tracking-tight text-white">
-            What the AI Ops Engine Provides
-          </h3>
+        <div className="mt-6 rounded-2xl border border-green-500/20 bg-black/60 p-6 sm:p-8 lg:p-10 w-full relative overflow-hidden shadow-[0_0_50px_-15px_rgba(34,197,94,0.12)]">
+          <div className="absolute inset-0 bg-gradient-to-b from-green-500/[0.04] to-transparent pointer-events-none" />
 
-          <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div className="flex items-start gap-3.5">
-              <SearchCode className="h-6 w-6 text-green-400 shrink-0 mt-0.5" />
+          {/* Centered Heading with Line Accents */}
+          <div className="relative flex items-center justify-center gap-3 sm:gap-4 text-center">
+            <div className="h-px w-10 sm:w-20 bg-gradient-to-r from-transparent to-white/20" />
+            <h3 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-wider text-white">
+              WHAT THE <span className="text-green-400">AI OPS ENGINE</span> PROVIDES
+            </h3>
+            <div className="h-px w-10 sm:w-20 bg-gradient-to-l from-transparent to-white/20" />
+          </div>
+
+          <div className="relative mt-6 sm:mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Card 1: ROOT CAUSE ANALYSIS */}
+            <div className="group relative rounded-xl border border-white/10 bg-black/50 p-5 sm:p-6 flex items-center gap-4 transition-all duration-300 ease-out hover:z-20 hover:scale-[1.025] hover:border-green-400/30 hover:shadow-[0_16px_36px_rgba(0,0,0,0.6),0_0_20px_rgba(39,208,54,0.1)]">
+              <div className="relative flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-green-500/[0.08] border border-green-500/25 text-green-400 shrink-0 shadow-[0_0_20px_rgba(34,197,94,0.15)] group-hover:scale-105 group-hover:border-green-400/50 transition-all duration-300">
+                <SearchCode className="h-5 w-5 sm:h-6 sm:w-6 text-green-400" strokeWidth={1.75} />
+              </div>
               <div>
-                <h4 className="font-mono text-xs font-bold uppercase text-white">Root Cause Analysis</h4>
-                <p className="mt-1 text-xs text-white/50 leading-relaxed">
+                <h4 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-tight text-white">
+                  ROOT CAUSE ANALYSIS
+                </h4>
+                <p className="mt-1 text-xs sm:text-sm text-white/50 leading-relaxed">
                   Pinpoints the exact failure mechanism across logs, traces, and metrics.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3.5">
-              <TrendingUp className="h-6 w-6 text-green-400 shrink-0 mt-0.5" />
+            {/* Card 2: CONFIDENCE SCORING */}
+            <div className="group relative rounded-xl border border-white/10 bg-black/50 p-5 sm:p-6 flex items-center gap-4 transition-all duration-300 ease-out hover:z-20 hover:scale-[1.025] hover:border-green-400/30 hover:shadow-[0_16px_36px_rgba(0,0,0,0.6),0_0_20px_rgba(39,208,54,0.1)]">
+              <div className="relative flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-green-500/[0.08] border border-green-500/25 text-green-400 shrink-0 shadow-[0_0_20px_rgba(34,197,94,0.15)] group-hover:scale-105 group-hover:border-green-400/50 transition-all duration-300">
+                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-green-400" strokeWidth={1.75} />
+              </div>
               <div>
-                <h4 className="font-mono text-xs font-bold uppercase text-white">Confidence Scoring</h4>
-                <p className="mt-1 text-xs text-white/50 leading-relaxed">
+                <h4 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-tight text-white">
+                  CONFIDENCE SCORING
+                </h4>
+                <p className="mt-1 text-xs sm:text-sm text-white/50 leading-relaxed">
                   Probabilistic ratings to validate diagnostic certainty before taking action.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3.5">
-              <Lightbulb className="h-6 w-6 text-green-400 shrink-0 mt-0.5" />
+            {/* Card 3: SUGGESTED FIXES */}
+            <div className="group relative rounded-xl border border-white/10 bg-black/50 p-5 sm:p-6 flex items-center gap-4 transition-all duration-300 ease-out hover:z-20 hover:scale-[1.025] hover:border-green-400/30 hover:shadow-[0_16px_36px_rgba(0,0,0,0.6),0_0_20px_rgba(39,208,54,0.1)]">
+              <div className="relative flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-green-500/[0.08] border border-green-500/25 text-green-400 shrink-0 shadow-[0_0_20px_rgba(34,197,94,0.15)] group-hover:scale-105 group-hover:border-green-400/50 transition-all duration-300">
+                <Lightbulb className="h-5 w-5 sm:h-6 sm:w-6 text-green-400" strokeWidth={1.75} />
+              </div>
               <div>
-                <h4 className="font-mono text-xs font-bold uppercase text-white">Suggested Fixes</h4>
-                <p className="mt-1 text-xs text-white/50 leading-relaxed">
+                <h4 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-tight text-white">
+                  SUGGESTED FIXES
+                </h4>
+                <p className="mt-1 text-xs sm:text-sm text-white/50 leading-relaxed">
                   Ordered, step-by-step remediation procedures to reduce MTTR.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3.5">
-              <User className="h-6 w-6 text-green-400 shrink-0 mt-0.5" />
+            {/* Card 4: HUMAN SAFEGUARDS */}
+            <div className="group relative rounded-xl border border-white/10 bg-black/50 p-5 sm:p-6 flex items-center gap-4 transition-all duration-300 ease-out hover:z-20 hover:scale-[1.025] hover:border-green-400/30 hover:shadow-[0_16px_36px_rgba(0,0,0,0.6),0_0_20px_rgba(39,208,54,0.1)]">
+              <div className="relative flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-green-500/[0.08] border border-green-500/25 text-green-400 shrink-0 shadow-[0_0_20px_rgba(34,197,94,0.15)] group-hover:scale-105 group-hover:border-green-400/50 transition-all duration-300">
+                <User className="h-5 w-5 sm:h-6 sm:w-6 text-green-400" strokeWidth={1.75} />
+              </div>
               <div>
-                <h4 className="font-mono text-xs font-bold uppercase text-white">Human Safeguards</h4>
-                <p className="mt-1 text-xs text-white/50 leading-relaxed">
+                <h4 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-tight text-white">
+                  HUMAN SAFEGUARDS
+                </h4>
+                <p className="mt-1 text-xs sm:text-sm text-white/50 leading-relaxed">
                   Flags high-impact actions that require human review and sign-off.
                 </p>
               </div>
