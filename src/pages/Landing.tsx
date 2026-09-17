@@ -127,7 +127,7 @@ export default function Landing({
   return (
     <>
       {/* Hero */}
-      <section className="relative w-full rounded-2xl border border-white/20 overflow-hidden bg-black flex flex-col lg:flex-row min-h-[380px] lg:min-h-[460px]">
+      <section className="relative w-full rounded-2xl overflow-hidden bg-black flex flex-col lg:flex-row min-h-[380px] lg:min-h-[460px]">
         <div className="flex-1 p-6 sm:p-8 lg:p-10 flex flex-col justify-center z-10">
           <span className="inline-flex items-center gap-2 self-start rounded-lg bg-green-400/15 py-1.5 px-3 text-xs text-green-300 ring-1 ring-green-400/25">
             The #1 AI-driven platform for intelligent operations
@@ -135,24 +135,27 @@ export default function Landing({
 
           <h1
             aria-label={HEADLINE_TEXT}
-            className="mt-4 font-mono text-2xl font-bold uppercase leading-[1.15] tracking-tight text-white sm:text-3xl lg:text-4xl"
+            className="mt-4 grid grid-cols-1 grid-rows-1 font-mono text-2xl font-bold uppercase leading-[1.15] tracking-tight text-white sm:text-3xl lg:text-4xl"
           >
-            <span>{displayedHeadline}</span>
-            <span className="inline-block text-green-400 animate-cursor-blink ml-0.5" aria-hidden="true">
-              _
+            <span className="invisible select-none pointer-events-none col-start-1 row-start-1" aria-hidden="true">
+              {HEADLINE_TEXT}_
+            </span>
+            <span className="col-start-1 row-start-1">
+              <span>{displayedHeadline}</span>
+              <span className="inline-block text-green-400 animate-cursor-blink ml-0.5" aria-hidden="true">
+                _
+              </span>
             </span>
           </h1>
 
-          <p className="mt-5 text-sm leading-relaxed text-white/50 sm:text-base">
-            We combine advanced technology with expert guidance to detect
-            incidents early, analyze root causes instantly, and keep your
-            operations running securely around the clock.
+          <p className="mt-4 text-sm leading-relaxed text-white/50 sm:text-base">
+            Detect incidents instantly, isolate root causes in real time, and eliminate downtime 24/7.
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">
             <button
               onClick={handlePrimaryCta}
-              className="rounded-lg border border bg-green-400 px-5 py-2.5 text-sm font-medium text-black transition-colors hover:bg-green-300"
+              className="rounded-lg border border-transparent bg-green-400 px-5 py-2.5 text-sm font-medium text-black transition-colors hover:bg-green-300"
             >
               Get a demo
             </button>
@@ -166,30 +169,32 @@ export default function Landing({
           </div>
         </div>
 
-        <div className="hidden lg:block relative lg:w-[46%] overflow-hidden border-l border-white/15 pointer-events-none">
+        <div className="hidden lg:block relative lg:w-[46%] overflow-hidden pointer-events-none [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]">
           {isDesktop && (
             <LightPillar
               topColor="#27d036"
               bottomColor="#d5bdd4"
-              intensity={1}
+              intensity={0.9}
               rotationSpeed={0.3}
-              glowAmount={0.002}
-              pillarWidth={3}
+              glowAmount={0.0014}
+              pillarWidth={1.8}
               pillarHeight={0.4}
-              noiseIntensity={0.5}
+              noiseIntensity={0.4}
               pillarRotation={25}
               interactive={false}
               mixBlendMode="screen"
               quality="high"
               paused={paused}
-              className=""
+              className="filter blur-[0.5px]"
             />
           )}
+          <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-black via-transparent to-transparent opacity-70" />
+          <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-black/30 via-transparent to-black/30" />
         </div>
       </section>
 
       {/* Features */}
-      <section className="w-full rounded-2xl border border-white/20 overflow-hidden bg-black p-6 sm:p-8">
+      <section className="w-full rounded-2xl overflow-hidden bg-black p-6 sm:p-8">
         <span className="inline-flex items-center gap-2 rounded-lg bg-green-400/15 px-3 py-1.5 text-xs text-green-300 ring-1 ring-green-400/25">
           Built for operations teams
         </span>
@@ -224,7 +229,7 @@ export default function Landing({
       </section>
 
       {/* How It Works & Operational Deep Dive */}
-      <section id="learn-more" className="scroll-mt-24 w-full rounded-2xl border border-white/20 overflow-hidden bg-black p-6 sm:p-8">
+      <section id="learn-more" className="scroll-mt-24 w-full rounded-2xl overflow-hidden bg-black p-6 sm:p-8">
         <span className="inline-flex items-center rounded-lg bg-green-400/15 px-3 py-1.5 text-xs text-green-300 ring-1 ring-green-400/25">
           Intelligent Operations Workflow
         </span>
@@ -353,7 +358,7 @@ export default function Landing({
       </section>
 
       {/* Footer */}
-      <footer className="mt-auto w-full rounded-2xl border border-white/15 py-6 text-center text-xs sm:text-sm text-white/60">
+      <footer className="mt-auto w-full py-6 text-center text-xs sm:text-sm text-white/40">
         <p>&copy; 2026 AI Ops. All rights reserved.</p>
       </footer>
     </>
