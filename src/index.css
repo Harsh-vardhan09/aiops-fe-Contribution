@@ -95,10 +95,11 @@ input:disabled {
 }
 
 .page-unblurred {
-  filter: blur(0px) brightness(1);
+  filter: none;
 }
 
 .navbar-blur-60 {
-  backdrop-filter: blur(60px);
   -webkit-backdrop-filter: blur(60px);
+  backdrop-filter: blur(60px);
+  transform: translateZ(0);
 }

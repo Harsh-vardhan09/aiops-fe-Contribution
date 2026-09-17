@@ -72,7 +72,7 @@ export default function Navbar({
   return (
     <nav
       ref={navRef}
-      className={`relative w-full navbar-blur-60 transition-all duration-300 ease-out ${
+      className={`relative w-full backdrop-blur-[60px] navbar-blur-60 transition-all duration-300 ease-out ${
         isScrolled
           ? "rounded-none border-b border-white/20 border-t-0 border-x-0 bg-black/75 px-4 py-4 shadow-xl sm:rounded-2xl sm:border sm:border-white/20 sm:px-6 sm:py-4 sm:shadow-2xl"
           : "rounded-2xl border border-white/20 bg-black/60 px-4 py-3 sm:px-6 shadow-none"
