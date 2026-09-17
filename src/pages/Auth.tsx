@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 import Logo from "../components/Logo";
 import { ArrowLeft } from "lucide-react";
 
 export default function Auth({
   onNavigateHome,
+  onCloseStart,
+  isClosing: externalIsClosing,
   initialMode = "login"
 }: {
   onNavigateHome: () => void;
+  onCloseStart?: () => void;
+  isClosing?: boolean;
   initialMode?: "login" | "signup";
 }) {
   const [email, setEmail] = useState("");
@@ -15,6 +19,27 @@ export default function Auth({
   const [isSignUp, setIsSignUp] = useState(initialMode === "signup");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
+  const [internalIsClosing, setInternalIsClosing] = useState(false);
+  const isClosing = Boolean(externalIsClosing || internalIsClosing);
+
+  const triggerClose = useCallback(() => {
+    if (isClosing) return;
+    setInternalIsClosing(true);
+    onCloseStart?.();
+    setTimeout(() => {
+      onNavigateHome();
+    }, 240);
+  }, [isClosing, onCloseStart, onNavigateHome]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        triggerClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [triggerClose]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +73,7 @@ export default function Auth({
       setMessage({ type: "error", text: error.message });
     } else {
       setMessage({ type: "success", text: "Login successful!" });
+      triggerClose();
     }
   };
 
@@ -56,18 +82,24 @@ export default function Auth({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-5 py-12 bg-black/60 backdrop-blur-md animate-fade-swift"
+      className={`fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-5 py-12 bg-black/60 backdrop-blur-md ${
+        isClosing ? "animate-fade-out-swift pointer-events-none" : "animate-fade-swift"
+      }`}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onNavigateHome();
+        if (e.target === e.currentTarget) triggerClose();
       }}
     >
       {/* ambient green glow */}
       <div className="pointer-events-none absolute left-1/2 top-1/2 h-[38rem] w-[38rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-green-400/10 blur-[120px]" />
 
-      <div className="relative w-full max-w-md rounded-2xl border border-white/15 bg-black/30 p-8 backdrop-blur-2xl sm:p-10 animate-scale-up shadow-2xl">
+      <div
+        className={`relative w-full max-w-md rounded-2xl border border-white/15 bg-black/30 p-8 backdrop-blur-2xl sm:p-10 shadow-2xl ${
+          isClosing ? "animate-scale-down pointer-events-none" : "animate-scale-up"
+        }`}
+      >
         <button
           type="button"
-          onClick={onNavigateHome}
+          onClick={triggerClose}
           className="group flex items-center gap-2 text-white transition-colors hover:text-green-400"
         >
           <ArrowLeft className="h-5 w-5 text-white/70 transition-transform group-hover:-translate-x-1 group-hover:text-green-400" />

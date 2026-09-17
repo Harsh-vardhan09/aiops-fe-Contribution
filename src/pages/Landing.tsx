@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import LightPillar from "@/components/LightPillar";
 import {
   Rocket,
@@ -10,9 +11,63 @@ import {
   Bolt,
   Bot,
   Target,
+  SearchCode,
   Lightbulb,
   User,
 } from "lucide-react";
+
+const HEADLINE_TEXT = "Comprehensive AI Ops solutions designed for every digital business";
+
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(min-width: 1024px)").matches;
+  });
+
+  useEffect(() => {
+    const mql = window.matchMedia("(min-width: 1024px)");
+    const onChange = (e: MediaQueryListEvent) => {
+      setIsDesktop(e.matches);
+    };
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+
+  return isDesktop;
+}
+
+function useTypewriter(text: string, speed = 32, startDelay = 150) {
+  const [displayedText, setDisplayedText] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setDisplayedText(text);
+      return;
+    }
+
+    let timeoutId: number;
+    let currentIndex = 0;
+
+    const startTimeout = window.setTimeout(() => {
+      const intervalId = window.setInterval(() => {
+        currentIndex++;
+        setDisplayedText(text.slice(0, currentIndex));
+        if (currentIndex >= text.length) {
+          window.clearInterval(intervalId);
+        }
+      }, speed);
+
+      timeoutId = intervalId;
+    }, startDelay);
+
+    return () => {
+      window.clearTimeout(startTimeout);
+      if (timeoutId) window.clearInterval(timeoutId);
+    };
+  }, [text, speed, startDelay]);
+
+  return displayedText;
+}
 
 const features = [
   {
@@ -58,6 +113,9 @@ export default function Landing({
   onDashboardClick?: () => void;
   paused?: boolean;
 }) {
+  const isDesktop = useIsDesktop();
+  const displayedHeadline = useTypewriter(HEADLINE_TEXT, 32, 150);
+
   const handlePrimaryCta = () => {
     if (session) {
       onDashboardClick?.();
@@ -69,14 +127,20 @@ export default function Landing({
   return (
     <>
       {/* Hero */}
-      <section className="relative w-full rounded-2xl border border-white/20 overflow-hidden bg-black flex flex-col lg:flex-row min-h-[460px]">
+      <section className="relative w-full rounded-2xl border border-white/20 overflow-hidden bg-black flex flex-col lg:flex-row min-h-[380px] lg:min-h-[460px]">
         <div className="flex-1 p-6 sm:p-8 lg:p-10 flex flex-col justify-center z-10">
           <span className="inline-flex items-center gap-2 self-start rounded-lg bg-green-400/15 py-1.5 px-3 text-xs text-green-300 ring-1 ring-green-400/25">
             The #1 AI-driven platform for intelligent operations
           </span>
 
-          <h1 className="mt-4 font-mono text-2xl font-bold uppercase leading-[1.15] tracking-tight text-white sm:text-3xl lg:text-4xl">
-            Comprehensive AI Ops solutions designed for every digital business
+          <h1
+            aria-label={HEADLINE_TEXT}
+            className="mt-4 font-mono text-2xl font-bold uppercase leading-[1.15] tracking-tight text-white sm:text-3xl lg:text-4xl"
+          >
+            <span>{displayedHeadline}</span>
+            <span className="inline-block text-green-400 animate-cursor-blink ml-0.5" aria-hidden="true">
+              _
+            </span>
           </h1>
 
           <p className="mt-5 text-sm leading-relaxed text-white/50 sm:text-base">
@@ -102,23 +166,25 @@ export default function Landing({
           </div>
         </div>
 
-        <div className="relative w-full lg:w-[46%] min-h-[280px] lg:min-h-auto overflow-hidden border-t lg:border-t-0 lg:border-l border-white/15">
-          <LightPillar
-            topColor="#27d036"
-            bottomColor="#d5bdd4"
-            intensity={1}
-            rotationSpeed={0.3}
-            glowAmount={0.002}
-            pillarWidth={3}
-            pillarHeight={0.4}
-            noiseIntensity={0.5}
-            pillarRotation={25}
-            interactive={false}
-            mixBlendMode="screen"
-            quality="high"
-            paused={paused}
-            className=""
-          />
+        <div className="hidden lg:block relative lg:w-[46%] overflow-hidden border-l border-white/15 pointer-events-none">
+          {isDesktop && (
+            <LightPillar
+              topColor="#27d036"
+              bottomColor="#d5bdd4"
+              intensity={1}
+              rotationSpeed={0.3}
+              glowAmount={0.002}
+              pillarWidth={3}
+              pillarHeight={0.4}
+              noiseIntensity={0.5}
+              pillarRotation={25}
+              interactive={false}
+              mixBlendMode="screen"
+              quality="high"
+              paused={paused}
+              className=""
+            />
+          )}
         </div>
       </section>
 
@@ -219,7 +285,7 @@ export default function Landing({
           <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="flex items-start gap-3">
               <div className="rounded-lg bg-green-400/10 p-2 text-green-400 shrink-0">
-                <Target className="h-4 w-4" />
+                <SearchCode className="h-4 w-4" />
               </div>
               <div>
                 <h4 className="font-mono text-xs font-bold uppercase text-white">Root Cause Analysis</h4>
