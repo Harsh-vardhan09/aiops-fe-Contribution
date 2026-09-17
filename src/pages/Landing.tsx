@@ -10,7 +10,6 @@ import {
   Radio,
   Bolt,
   Bot,
-  Target,
   SearchCode,
   Lightbulb,
   User,
@@ -194,8 +193,8 @@ export default function Landing({
       </section>
 
       {/* Features */}
-      <section className="w-full rounded-2xl overflow-hidden bg-black p-6 sm:p-8">
-        <span className="inline-flex items-center gap-2 rounded-lg bg-green-400/15 px-3 py-1.5 text-xs text-green-300 ring-1 ring-green-400/25">
+      <section className="w-full flex flex-col">
+        <span className="inline-flex items-center gap-2 self-start rounded-lg bg-green-400/15 px-3 py-1.5 text-xs text-green-300 ring-1 ring-green-400/25">
           Built for operations teams
         </span>
 
@@ -203,24 +202,26 @@ export default function Landing({
           Why choose AI Ops?
         </h2>
 
-        <div className="mt-8 grid gap-px bg-white/15 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 rounded-lg overflow-hidden border border-white/15">
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
           {features.map((f) => {
             const Icon = f.icon;
             return (
               <div
                 key={f.title}
-                className="bg-black p-6 transition-colors hover:bg-green-400/5 flex flex-col justify-between"
+                className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] p-5 sm:p-6 transition-all duration-300 ease-out hover:z-20 hover:scale-[1.025] hover:border-green-400/30 hover:shadow-[0_16px_36px_rgba(0,0,0,0.6),0_0_20px_rgba(39,208,54,0.1)] flex flex-col justify-between"
               >
                 <div>
-                  <div className="text-green-400">
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  <h3 className="mt-4 font-mono text-sm sm:text-base font-bold uppercase tracking-tight text-white">
+                  <h3 className="font-mono text-sm sm:text-base font-bold uppercase tracking-tight text-white">
                     {f.title}
                   </h3>
-                  <p className="mt-2.5 text-xs sm:text-sm leading-relaxed text-white/50">
-                    {f.body}
-                  </p>
+                  <div className="mt-4 sm:mt-5 flex items-center gap-4">
+                    <div className="text-green-400 shrink-0">
+                      <Icon className="h-8 w-8 sm:h-9 sm:w-9 text-green-400 group-hover:scale-105 transition-transform duration-300" strokeWidth={1.75} />
+                    </div>
+                    <p className="text-xs sm:text-sm leading-relaxed text-white/50">
+                      {f.body}
+                    </p>
+                  </div>
                 </div>
               </div>
             );
@@ -229,8 +230,8 @@ export default function Landing({
       </section>
 
       {/* How It Works & Operational Deep Dive */}
-      <section id="learn-more" className="scroll-mt-24 w-full rounded-2xl overflow-hidden bg-black p-6 sm:p-8">
-        <span className="inline-flex items-center rounded-lg bg-green-400/15 px-3 py-1.5 text-xs text-green-300 ring-1 ring-green-400/25">
+      <section id="learn-more" className="scroll-mt-24 w-full flex flex-col">
+        <span className="inline-flex items-center self-start rounded-lg bg-green-400/15 px-3 py-1.5 text-xs text-green-300 ring-1 ring-green-400/25">
           Intelligent Operations Workflow
         </span>
 
@@ -243,94 +244,122 @@ export default function Landing({
         </p>
 
         {/* 3-Step Lifecycle Grid */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
           {/* Step 1 */}
-          <div className="rounded-xl border border-white/10 bg-white/[0.02] p-5 sm:p-6 hover:border-green-400/25 transition-all">
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-xs font-bold text-green-400">01. INGESTION</span>
-              <Bolt className="h-4 w-4 text-green-400" />
+          <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] p-4 sm:p-5 transition-all duration-300 ease-out hover:z-20 hover:scale-[1.025] hover:border-green-400/30 hover:shadow-[0_16px_36px_rgba(0,0,0,0.6),0_0_20px_rgba(39,208,54,0.1)] flex flex-col justify-between min-h-[140px]">
+            <div className="relative z-10">
+              <span className="font-mono text-xs font-bold text-green-400 tracking-wider block">01. INGESTION</span>
+              <h3 className="mt-1.5 font-mono text-sm sm:text-base font-bold uppercase tracking-tight text-white">Project Setup</h3>
+              <p className="mt-2 text-xs leading-relaxed text-white/60 max-w-[78%]">
+                Stream service events and metrics in real time with secure API keys.
+              </p>
             </div>
-            <h3 className="mt-3 font-mono text-sm font-bold uppercase text-white">Project Setup</h3>
-            <p className="mt-2 text-xs leading-relaxed text-white/60">
-              Stream service events and metrics in real time with secure API keys.
-            </p>
+            <Bolt
+              strokeWidth={1.5}
+              className="pointer-events-none absolute -bottom-3 -right-3 h-24 w-24 text-green-400/25 group-hover:text-green-400/40 group-hover:scale-105 transition-all duration-300"
+            />
           </div>
 
           {/* Step 2 */}
-          <div className="rounded-xl border border-white/10 bg-white/[0.02] p-5 sm:p-6 hover:border-green-400/25 transition-all">
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-xs font-bold text-green-400">02. LIVE TRIAGE</span>
-              <Radio className="h-4 w-4 text-green-400" />
+          <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] p-4 sm:p-5 transition-all duration-300 ease-out hover:z-20 hover:scale-[1.025] hover:border-green-400/30 hover:shadow-[0_16px_36px_rgba(0,0,0,0.6),0_0_20px_rgba(39,208,54,0.1)] flex flex-col justify-between min-h-[140px]">
+            <div className="relative z-10">
+              <span className="font-mono text-xs font-bold text-green-400 tracking-wider block">02. LIVE TRIAGE</span>
+              <h3 className="mt-1.5 font-mono text-sm sm:text-base font-bold uppercase tracking-tight text-white">Live Monitoring</h3>
+              <p className="mt-2 text-xs leading-relaxed text-white/60 max-w-[78%]">
+                Track health metrics and automatically classify incident severity.
+              </p>
             </div>
-            <h3 className="mt-3 font-mono text-sm font-bold uppercase text-white">Live Monitoring</h3>
-            <p className="mt-2 text-xs leading-relaxed text-white/60">
-              Track health metrics and automatically classify incident severity.
-            </p>
+            <Radio
+              strokeWidth={1.5}
+              className="pointer-events-none absolute -bottom-3 -right-3 h-24 w-24 text-green-400/25 group-hover:text-green-400/40 group-hover:scale-105 transition-all duration-300"
+            />
           </div>
 
           {/* Step 3 */}
-          <div className="rounded-xl border border-white/10 bg-white/[0.02] p-5 sm:p-6 hover:border-green-400/25 transition-all">
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-xs font-bold text-green-400">03. AI ANALYSIS</span>
-              <Bot className="h-4 w-4 text-green-400" />
+          <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] p-4 sm:p-5 transition-all duration-300 ease-out hover:z-20 hover:scale-[1.025] hover:border-green-400/30 hover:shadow-[0_16px_36px_rgba(0,0,0,0.6),0_0_20px_rgba(39,208,54,0.1)] flex flex-col justify-between min-h-[140px]">
+            <div className="relative z-10">
+              <span className="font-mono text-xs font-bold text-green-400 tracking-wider block">03. AI ANALYSIS</span>
+              <h3 className="mt-1.5 font-mono text-sm sm:text-base font-bold uppercase tracking-tight text-white">Remediation</h3>
+              <p className="mt-2 text-xs leading-relaxed text-white/60 max-w-[78%]">
+                Pinpoint root causes, score confidence, and receive ordered fixes.
+              </p>
             </div>
-            <h3 className="mt-3 font-mono text-sm font-bold uppercase text-white">Remediation</h3>
-            <p className="mt-2 text-xs leading-relaxed text-white/60">
-              Pinpoint root causes, score confidence, and receive ordered fixes.
-            </p>
+            <Bot
+              strokeWidth={1.5}
+              className="pointer-events-none absolute -bottom-3 -right-3 h-24 w-24 text-green-400/25 group-hover:text-green-400/40 group-hover:scale-105 transition-all duration-300"
+            />
           </div>
         </div>
 
         {/* Deep Dive Breakdown Cards */}
-        <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
-          <h3 className="font-mono text-sm sm:text-base font-bold uppercase tracking-tight text-white flex items-center gap-2">
-            <Target className="h-4 w-4 text-green-400" /> What the AI Ops Engine Provides
-          </h3>
+        <div className="mt-6 rounded-2xl border border-green-500/20 bg-black/60 p-6 sm:p-8 lg:p-10 w-full relative overflow-hidden shadow-[0_0_50px_-15px_rgba(34,197,94,0.12)]">
+          <div className="absolute inset-0 bg-gradient-to-b from-green-500/[0.04] to-transparent pointer-events-none" />
 
-          <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div className="flex items-start gap-3">
-              <div className="rounded-lg bg-green-400/10 p-2 text-green-400 shrink-0">
-                <SearchCode className="h-4 w-4" />
+          {/* Centered Heading with Line Accents */}
+          <div className="relative flex items-center justify-center gap-3 sm:gap-4 text-center">
+            <div className="h-px w-10 sm:w-20 bg-gradient-to-r from-transparent to-white/20" />
+            <h3 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-wider text-white">
+              WHAT THE <span className="text-green-400">AI OPS ENGINE</span> PROVIDES
+            </h3>
+            <div className="h-px w-10 sm:w-20 bg-gradient-to-l from-transparent to-white/20" />
+          </div>
+
+          <div className="relative mt-6 sm:mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Card 1: ROOT CAUSE ANALYSIS */}
+            <div className="group relative rounded-xl border border-white/10 bg-black/50 p-5 sm:p-6 flex items-center gap-4 transition-all duration-300 ease-out hover:z-20 hover:scale-[1.025] hover:border-green-400/30 hover:shadow-[0_16px_36px_rgba(0,0,0,0.6),0_0_20px_rgba(39,208,54,0.1)]">
+              <div className="relative flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-green-500/[0.08] border border-green-500/25 text-green-400 shrink-0 shadow-[0_0_20px_rgba(34,197,94,0.15)] group-hover:scale-105 group-hover:border-green-400/50 transition-all duration-300">
+                <SearchCode className="h-5 w-5 sm:h-6 sm:w-6 text-green-400" strokeWidth={1.75} />
               </div>
               <div>
-                <h4 className="font-mono text-xs font-bold uppercase text-white">Root Cause Analysis</h4>
-                <p className="mt-1 text-xs text-white/50 leading-relaxed">
+                <h4 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-tight text-white">
+                  ROOT CAUSE ANALYSIS
+                </h4>
+                <p className="mt-1 text-xs sm:text-sm text-white/50 leading-relaxed">
                   Pinpoints the exact failure mechanism across logs, traces, and metrics.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <div className="rounded-lg bg-green-400/10 p-2 text-green-400 shrink-0">
-                <TrendingUp className="h-4 w-4" />
+            {/* Card 2: CONFIDENCE SCORING */}
+            <div className="group relative rounded-xl border border-white/10 bg-black/50 p-5 sm:p-6 flex items-center gap-4 transition-all duration-300 ease-out hover:z-20 hover:scale-[1.025] hover:border-green-400/30 hover:shadow-[0_16px_36px_rgba(0,0,0,0.6),0_0_20px_rgba(39,208,54,0.1)]">
+              <div className="relative flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-green-500/[0.08] border border-green-500/25 text-green-400 shrink-0 shadow-[0_0_20px_rgba(34,197,94,0.15)] group-hover:scale-105 group-hover:border-green-400/50 transition-all duration-300">
+                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-green-400" strokeWidth={1.75} />
               </div>
               <div>
-                <h4 className="font-mono text-xs font-bold uppercase text-white">Confidence Scoring</h4>
-                <p className="mt-1 text-xs text-white/50 leading-relaxed">
+                <h4 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-tight text-white">
+                  CONFIDENCE SCORING
+                </h4>
+                <p className="mt-1 text-xs sm:text-sm text-white/50 leading-relaxed">
                   Probabilistic ratings to validate diagnostic certainty before taking action.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <div className="rounded-lg bg-green-400/10 p-2 text-green-400 shrink-0">
-                <Lightbulb className="h-4 w-4" />
+            {/* Card 3: SUGGESTED FIXES */}
+            <div className="group relative rounded-xl border border-white/10 bg-black/50 p-5 sm:p-6 flex items-center gap-4 transition-all duration-300 ease-out hover:z-20 hover:scale-[1.025] hover:border-green-400/30 hover:shadow-[0_16px_36px_rgba(0,0,0,0.6),0_0_20px_rgba(39,208,54,0.1)]">
+              <div className="relative flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-green-500/[0.08] border border-green-500/25 text-green-400 shrink-0 shadow-[0_0_20px_rgba(34,197,94,0.15)] group-hover:scale-105 group-hover:border-green-400/50 transition-all duration-300">
+                <Lightbulb className="h-5 w-5 sm:h-6 sm:w-6 text-green-400" strokeWidth={1.75} />
               </div>
               <div>
-                <h4 className="font-mono text-xs font-bold uppercase text-white">Suggested Fixes</h4>
-                <p className="mt-1 text-xs text-white/50 leading-relaxed">
+                <h4 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-tight text-white">
+                  SUGGESTED FIXES
+                </h4>
+                <p className="mt-1 text-xs sm:text-sm text-white/50 leading-relaxed">
                   Ordered, step-by-step remediation procedures to reduce MTTR.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <div className="rounded-lg bg-green-400/10 p-2 text-green-400 shrink-0">
-                <User className="h-4 w-4" />
+            {/* Card 4: HUMAN SAFEGUARDS */}
+            <div className="group relative rounded-xl border border-white/10 bg-black/50 p-5 sm:p-6 flex items-center gap-4 transition-all duration-300 ease-out hover:z-20 hover:scale-[1.025] hover:border-green-400/30 hover:shadow-[0_16px_36px_rgba(0,0,0,0.6),0_0_20px_rgba(39,208,54,0.1)]">
+              <div className="relative flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-green-500/[0.08] border border-green-500/25 text-green-400 shrink-0 shadow-[0_0_20px_rgba(34,197,94,0.15)] group-hover:scale-105 group-hover:border-green-400/50 transition-all duration-300">
+                <User className="h-5 w-5 sm:h-6 sm:w-6 text-green-400" strokeWidth={1.75} />
               </div>
               <div>
-                <h4 className="font-mono text-xs font-bold uppercase text-white">Human Safeguards</h4>
-                <p className="mt-1 text-xs text-white/50 leading-relaxed">
+                <h4 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-tight text-white">
+                  HUMAN SAFEGUARDS
+                </h4>
+                <p className="mt-1 text-xs sm:text-sm text-white/50 leading-relaxed">
                   Flags high-impact actions that require human review and sign-off.
                 </p>
               </div>
