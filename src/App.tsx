@@ -15,7 +15,13 @@ export default function App() {
   const [isPillarPaused, setIsPillarPaused] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isAuthClosing, setIsAuthClosing] = useState(false);
   const navTimeoutRef = useRef<number | null>(null);
+  const currentPageRef = useRef<PageState>("landing");
+
+  useEffect(() => {
+    currentPageRef.current = currentPage;
+  }, [currentPage]);
 
   useEffect(() => {
     return () => {
@@ -68,8 +74,17 @@ export default function App() {
         setSession(session);
 
         if (session) {
-          setCurrentPage("dashboard");
-          localStorage.setItem("lastPage", "dashboard");
+          if (currentPageRef.current === "auth") {
+            setIsAuthClosing(true);
+            setTimeout(() => {
+              setCurrentPage("dashboard");
+              localStorage.setItem("lastPage", "dashboard");
+              setIsAuthClosing(false);
+            }, 260);
+          } else {
+            setCurrentPage("dashboard");
+            localStorage.setItem("lastPage", "dashboard");
+          }
         } else {
           setCurrentPage("landing");
           localStorage.setItem("lastPage", "landing");
@@ -86,6 +101,7 @@ export default function App() {
   }, []);
 
   const handleNavigateToPage = (page: PageState, mode?: "login" | "signup") => {
+    setIsAuthClosing(false);
     if (navTimeoutRef.current) {
       clearTimeout(navTimeoutRef.current);
       navTimeoutRef.current = null;
@@ -109,6 +125,23 @@ export default function App() {
     }
   };
 
+  const handleLogoClick = () => {
+    if (currentPage === "landing") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      handleNavigateToPage("landing");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const handleHomeClick = () => {
+    if (currentPage === "landing") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      handleNavigateToPage("landing");
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -128,7 +161,7 @@ export default function App() {
     );
   }
 
-  const isModalOpen = currentPage === "auth";
+  const isModalOpen = currentPage === "auth" && !isAuthClosing;
 
   return (
     <div className="relative min-h-screen flex flex-col bg-black">
@@ -159,8 +192,8 @@ export default function App() {
                     handleNavigateToPage("dashboard");
                   }
                 }}
-                onHomeClick={() => handleNavigateToPage("landing")}
-                onLogoClick={() => handleNavigateToPage("landing")}
+                onHomeClick={handleHomeClick}
+                onLogoClick={handleLogoClick}
                 onLogout={handleLogout}
                 onMenuOpenChange={setIsSignOutMenuOpen}
                 currentPage={currentPage === "dashboard" ? "dashboard" : "landing"}
@@ -201,7 +234,12 @@ export default function App() {
       {/* Auth card overlay floating above */}
       {currentPage === "auth" && (
         <Auth
-          onNavigateHome={() => handleNavigateToPage(session ? "dashboard" : "landing")}
+          onNavigateHome={() => {
+            setIsAuthClosing(false);
+            handleNavigateToPage(session ? "dashboard" : "landing");
+          }}
+          onCloseStart={() => setIsAuthClosing(true)}
+          isClosing={isAuthClosing}
           initialMode={authMode}
         />
       )}

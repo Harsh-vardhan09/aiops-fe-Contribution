@@ -59,6 +59,35 @@ input:disabled {
   }
 }
 
+@keyframes scaleDownFade {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.95) translateY(32px);
+  }
+}
+
+@keyframes fadeOutSwift {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes cursorBlink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
 @keyframes dropDownSlide {
   0% {
     opacity: 0;
@@ -74,8 +103,20 @@ input:disabled {
   animation: fadeInSwift 0.25s ease-out both;
 }
 
+.animate-fade-out-swift {
+  animation: fadeOutSwift 0.22s ease-in forwards;
+}
+
 .animate-scale-up {
   animation: scaleUpFade 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-scale-down {
+  animation: scaleDownFade 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-cursor-blink {
+  animation: cursorBlink 0.9s step-end infinite;
 }
 
 .animate-drop-down {
