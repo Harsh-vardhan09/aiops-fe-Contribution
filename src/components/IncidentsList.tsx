@@ -171,7 +171,7 @@ export default function IncidentsList({
 
   if (loading) {
     return (
-      <section className="w-full rounded-2xl overflow-hidden bg-black p-6 sm:p-8">
+      <section id="live-incidents-section" className="scroll-mt-28 w-full rounded-2xl overflow-hidden bg-black p-6 sm:p-8">
         <span className="inline-flex items-center gap-2 rounded-lg bg-red-500/15 px-3 py-1.5 text-xs text-red-400 ring-1 ring-red-500/25">
           <Radio className="h-3.5 w-3.5 text-red-400 animate-pulse" />
           Live Monitoring
@@ -185,7 +185,7 @@ export default function IncidentsList({
   }
 
   return (
-    <section className="w-full rounded-2xl overflow-hidden bg-black p-6 sm:p-8">
+    <section id="live-incidents-section" className="scroll-mt-28 w-full rounded-2xl overflow-hidden bg-black p-6 sm:p-8">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <span className="inline-flex items-center gap-2 rounded-lg bg-red-500/15 px-3 py-1.5 text-xs text-red-400 ring-1 ring-red-500/25">

@@ -205,7 +205,7 @@ export default function RightRail({
       </div>
 
       {/* Recent Activity Feed */}
-      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:p-5 backdrop-blur-sm">
+      <div id="recent-activity-section" className="scroll-mt-28 rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:p-5 backdrop-blur-sm">
         <div className="flex items-center gap-2 pb-3 border-b border-white/10">
           <Clock className="h-4 w-4 text-green-400" />
           <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-white">

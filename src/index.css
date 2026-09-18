@@ -157,6 +157,14 @@ input:disabled {
 }
 
 .navbar-blur-60 {
-  backdrop-filter: blur(60px);
-  -webkit-backdrop-filter: blur(60px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transform: translateZ(0);
+}
+
+@media (min-width: 640px) {
+  .navbar-blur-60 {
+    backdrop-filter: blur(36px);
+    -webkit-backdrop-filter: blur(36px);
+  }
 }

@@ -1,7 +1,7 @@
 import {
   FolderGit2,
   Radio,
-  Bot,
+  Clock,
   Settings,
   Plus,
   ShieldCheck,
@@ -49,7 +49,7 @@ export default function LeftRail({
           </div>
           <button
             onClick={onNewProjectClick}
-            className="inline-flex items-center gap-1 rounded-md border border-white/15 bg-white/5 px-2 py-1 font-mono text-[11px] uppercase tracking-wide text-white/70 transition-colors hover:border-green-400/30 hover:bg-green-400/10 hover:text-green-300"
+            className="lg:hidden inline-flex items-center gap-1 rounded-md border border-white/15 bg-white/5 px-2 py-1 font-mono text-[11px] uppercase tracking-wide text-white/70 transition-colors hover:border-green-400/30 hover:bg-green-400/10 hover:text-green-300"
             title="Create new project"
           >
             <Plus className="h-3 w-3" />
@@ -93,7 +93,7 @@ export default function LeftRail({
                       }`}
                     />
                     <div className="min-w-0">
-                      <div className="font-mono text-xs font-bold uppercase tracking-tight text-white truncate group-hover:text-green-300 transition-colors">
+                      <div className="font-mono text-xs font-medium text-white truncate group-hover:text-green-300 transition-colors">
                         {proj.name}
                       </div>
                       <div className="text-[11px] text-white/40 flex items-center gap-1.5 mt-0.5">
@@ -163,16 +163,16 @@ export default function LeftRail({
           </button>
 
           <button
-            onClick={() => onSelectQuickAccess("analysis")}
+            onClick={() => onSelectQuickAccess("activity")}
             className={`flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium transition-all ${
-              activeQuickAccess === "analysis"
+              activeQuickAccess === "activity"
                 ? "bg-green-400/15 text-green-300 border border-green-400/30 font-mono uppercase"
                 : "text-white/70 hover:bg-white/5 hover:text-white border border-transparent font-mono uppercase"
             }`}
           >
             <span className="flex items-center gap-2.5">
-              <Bot className="h-3.5 w-3.5 text-green-400" />
-              AI Analysis
+              <Clock className="h-3.5 w-3.5 text-green-400" />
+              Recent Activity
             </span>
             <span className="font-mono text-[10px] text-green-400">Live</span>
           </button>

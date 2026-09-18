@@ -189,7 +189,7 @@ export default function Landing({
       </section>
 
       {/* Features */}
-      <section className="w-full flex flex-col">
+      <section className="w-full flex flex-col pt-6 sm:pt-10">
         <span className="inline-flex items-center gap-2 self-start rounded-lg bg-green-400/15 px-3 py-1.5 text-xs text-green-300 ring-1 ring-green-400/25">
           Built for operations teams
         </span>
@@ -226,7 +226,7 @@ export default function Landing({
       </section>
 
       {/* How It Works & Operational Deep Dive */}
-      <section id="learn-more" className="scroll-mt-24 w-full flex flex-col">
+      <section id="learn-more" className="scroll-mt-24 w-full flex flex-col pt-10 sm:pt-16">
         <span className="inline-flex items-center self-start rounded-lg bg-green-400/15 px-3 py-1.5 text-xs text-green-300 ring-1 ring-green-400/25">
           Intelligent Operations Workflow
         </span>
@@ -350,7 +350,7 @@ export default function Landing({
       </section>
 
       {/* CTA */}
-      <section className="w-full rounded-2xl border border-white/20 bg-gradient-to-br from-green-400/10 to-transparent p-8 sm:p-12 text-center">
+      <section className="w-full rounded-2xl border border-white/20 bg-gradient-to-br from-green-400/10 to-transparent p-8 sm:p-12 text-center mt-10 sm:mt-16">
         <h2 className="mx-auto max-w-2xl font-mono text-2xl font-bold uppercase leading-[1.15] tracking-tight text-white sm:text-3xl">
           Ready to transform your operations?
         </h2>
@@ -368,7 +368,7 @@ export default function Landing({
       </section>
 
       {/* Footer */}
-      <footer className="mt-auto w-full py-6 text-center text-xs sm:text-sm text-white/40">
+      <footer className="mt-8 sm:mt-12 w-full py-6 text-center text-xs sm:text-sm text-white/40">
         <p>&copy; 2026 AI Ops. All rights reserved.</p>
       </footer>
     </>

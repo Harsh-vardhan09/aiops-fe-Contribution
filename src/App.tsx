@@ -16,6 +16,7 @@ export default function App() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isAuthClosing, setIsAuthClosing] = useState(false);
+  const [navbarGuideText, setNavbarGuideText] = useState<string | null>(null);
   const navTimeoutRef = useRef<number | null>(null);
   const currentPageRef = useRef<PageState>("landing");
 
@@ -164,42 +165,44 @@ export default function App() {
   const isModalOpen = currentPage === "auth" && !isAuthClosing;
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-black">
+    <div className="relative min-h-screen flex flex-col bg-black text-white">
+      {/* Fixed Header Layer - Permanently fixed to top of viewport */}
+      <header className="fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none">
+        <div
+          className={`w-full flex justify-center pointer-events-auto transition-all duration-300 ease-out ${
+            isScrolled
+              ? "max-w-full sm:max-w-[990px] px-0 sm:px-4 pt-0 sm:pt-3"
+              : "max-w-[920px] px-4 pt-3 sm:pt-6"
+          }`}
+        >
+          <Navbar
+            session={session}
+            isScrolled={isScrolled}
+            onAuthClick={(mode) => handleNavigateToPage("auth", mode)}
+            onDashboardClick={() => {
+              handleNavigateToPage("dashboard");
+            }}
+            onHomeClick={handleHomeClick}
+            onLogoClick={handleLogoClick}
+            onLogout={handleLogout}
+            onMenuOpenChange={setIsSignOutMenuOpen}
+            currentPage={currentPage === "dashboard" ? "dashboard" : "landing"}
+            guideOverlayText={navbarGuideText}
+          />
+        </div>
+      </header>
+
       {/* Underlying layout and page content */}
       <div
         key={session ? "auth-session" : "guest-session"}
-        className={`flex-1 flex flex-col page-blur-transition ${isModalOpen ? "page-blurred" : "page-unblurred"
-          }`}
+        className={`flex-1 flex flex-col page-blur-transition ${
+          isModalOpen ? "page-blurred" : "page-unblurred"
+        }`}
       >
-        <main className="min-h-screen flex-1 flex flex-col bg-black text-white pb-6">
-          {/* Sticky Header Layer */}
-          <header className="sticky top-0 z-40 w-full flex justify-center pointer-events-none">
-            <div
-              className={`w-full flex justify-center pointer-events-auto transition-all duration-300 ease-out ${
-                isScrolled
-                  ? "max-w-full sm:max-w-[990px] px-0 sm:px-4 pt-0 sm:pt-3"
-                  : "max-w-[920px] px-4 pt-4 sm:pt-6"
-              }`}
-            >
-              <Navbar
-                session={session}
-                isScrolled={isScrolled}
-                onAuthClick={(mode) => handleNavigateToPage("auth", mode)}
-                onDashboardClick={() => {
-                  handleNavigateToPage("dashboard");
-                }}
-                onHomeClick={handleHomeClick}
-                onLogoClick={handleLogoClick}
-                onLogout={handleLogout}
-                onMenuOpenChange={setIsSignOutMenuOpen}
-                currentPage={currentPage === "dashboard" ? "dashboard" : "landing"}
-              />
-            </div>
-          </header>
-
+        <main className="flex-1 flex flex-col bg-black text-white pb-6 pt-20 sm:pt-24">
           {/* Page Content Container */}
           <div
-            className={`mx-auto w-full px-4 flex flex-col flex-1 gap-6 pt-4 sm:pt-5 transition-all duration-300 ${
+            className={`mx-auto w-full px-4 flex flex-col flex-1 gap-6 transition-all duration-300 ${
               currentPage === "dashboard"
                 ? "max-w-[1700px] 2xl:max-w-[1800px] sm:px-6 lg:px-8 xl:px-10"
                 : "max-w-[920px]"
@@ -212,7 +215,7 @@ export default function App() {
                   isSignOutMenuOpen ? "page-blurred" : "page-unblurred"
                 }`}
               >
-                <Dashboard />
+                <Dashboard onGuideTextChange={setNavbarGuideText} />
               </div>
             ) : (
               <div
