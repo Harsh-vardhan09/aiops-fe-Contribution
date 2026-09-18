@@ -186,11 +186,7 @@ export default function App() {
                 isScrolled={isScrolled}
                 onAuthClick={(mode) => handleNavigateToPage("auth", mode)}
                 onDashboardClick={() => {
-                  if (!session) {
-                    handleNavigateToPage("auth", "login");
-                  } else {
-                    handleNavigateToPage("dashboard");
-                  }
+                  handleNavigateToPage("dashboard");
                 }}
                 onHomeClick={handleHomeClick}
                 onLogoClick={handleLogoClick}
@@ -202,8 +198,14 @@ export default function App() {
           </header>
 
           {/* Page Content Container */}
-          <div className="mx-auto w-full max-w-[920px] px-4 flex flex-col flex-1 gap-6 pt-4 sm:pt-5">
-            {currentPage === "dashboard" && session ? (
+          <div
+            className={`mx-auto w-full px-4 flex flex-col flex-1 gap-6 pt-4 sm:pt-5 transition-all duration-300 ${
+              currentPage === "dashboard"
+                ? "max-w-[1700px] 2xl:max-w-[1800px] sm:px-6 lg:px-8 xl:px-10"
+                : "max-w-[920px]"
+            }`}
+          >
+            {currentPage === "dashboard" ? (
               <div
                 key="dashboard-content"
                 className={`flex flex-col flex-1 gap-6 animate-fade-swift page-blur-transition ${
