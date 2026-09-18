@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { fetchIncidents, analyzeIncident } from "../api/backend";
+import { useEffect, useState, useCallback } from "react";
+import { fetchIncidents, analyzeIncident, ingestLog, type Incident } from "../api/backend";
 import { supabase } from "../lib/supabase";
 import {
   Bot,
@@ -15,6 +15,8 @@ import {
   Copy,
   Terminal,
   Sparkles,
+  Clock,
+  RefreshCw,
 } from "lucide-react";
 
 type Analysis = {
@@ -30,6 +32,7 @@ interface IncidentsListProps {
   onIncidentCountChange?: (count: number) => void;
   onServicesCountChange?: (count: number) => void;
   onActivityAdd?: (activity: any) => void;
+  selectedProjectId?: string | null;
 }
 
 export default function IncidentsList({
@@ -37,8 +40,9 @@ export default function IncidentsList({
   onIncidentCountChange,
   onServicesCountChange,
   onActivityAdd,
+  selectedProjectId,
 }: IncidentsListProps) {
-  const [incidents, setIncidents] = useState<any[]>([]);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [analysisByIncident, setAnalysisByIncident] = useState<
@@ -47,12 +51,27 @@ export default function IncidentsList({
   const [analyzingId, setAnalyzingId] = useState<string | null>(null);
   const [copiedSnippet, setCopiedSnippet] = useState(false);
   const [simulating, setSimulating] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Determine if this is a brand new project without telemetry vs healthy system
-  const hasTelemetry =
-    incidents.length > 0 ||
-    activeProject?.has_telemetry === true ||
-    activeProject?.incidentCount > 0;
+  const load = useCallback(async (isSilent = false) => {
+    try {
+      if (!isSilent) setLoading(true);
+      else setRefreshing(true);
+      setError(null);
+      const data = await fetchIncidents();
+      const list = data || [];
+      setIncidents(list);
+      onIncidentCountChange?.(list.length);
+      const uniqueServices = new Set(list.map((i: any) => i.service).filter(Boolean)).size;
+      onServicesCountChange?.(uniqueServices);
+    } catch (err: any) {
+      console.error("Failed to load incidents:", err);
+      setError(err.message || "Failed to load incidents from backend");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [onIncidentCountChange, onServicesCountChange]);
 
   useEffect(() => {
     const checkAuthAndLoad = async () => {
@@ -72,28 +91,16 @@ export default function IncidentsList({
     };
 
     checkAuthAndLoad();
-  }, []);
+  }, [load]);
 
-  const load = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchIncidents();
-      const list = data || [];
-      setIncidents(list);
-      onIncidentCountChange?.(list.length);
-      const uniqueServices = new Set(list.map((i: any) => i.service).filter(Boolean)).size;
-      onServicesCountChange?.(uniqueServices);
-    } catch (err: any) {
-      console.error("Failed to load incidents:", err);
-      setError(err.message || "Failed to load incidents");
-      setIncidents([]);
-      onIncidentCountChange?.(0);
-      onServicesCountChange?.(0);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Filter incidents if a specific project is selected, or show all
+  const filteredIncidents = selectedProjectId
+    ? incidents.filter((i) => i.project_id === selectedProjectId)
+    : incidents;
+
+  const hasTelemetry =
+    incidents.length > 0 ||
+    activeProject?.incidentCount > 0;
 
   const getSeverityClass = (severity: string) => {
     const sev = severity?.toLowerCase();
@@ -105,44 +112,58 @@ export default function IncidentsList({
   };
 
   const handleCopySnippet = () => {
-    const key = activeProject?.api_key || "YOUR_API_KEY";
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || "https://api.aiops.dev";
-    const snippet = `curl -X POST ${backendUrl}/events \\
-  -H "Authorization: Bearer ${key}" \\
+    const key = activeProject?.api_key || "YOUR_PROJECT_API_KEY";
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || "https://aiops-api.onrender.com";
+    const snippet = `curl -X POST ${backendUrl}/logs \\
   -H "Content-Type: application/json" \\
-  -d '{"service": "payment-gateway", "severity": "high", "summary": "Connection timeout on Stripe webhook"}'`;
+  -d '{"api_key": "${key}", "service": "payment-gateway", "level": "ERROR", "message": "Connection timeout on Stripe webhook"}'`;
     navigator.clipboard.writeText(snippet);
     setCopiedSnippet(true);
     setTimeout(() => setCopiedSnippet(false), 2000);
   };
 
-  const handleSimulateIncident = () => {
+  const handleSimulateLogEvent = async () => {
+    if (!activeProject?.api_key) {
+      setError("Please select or create a project with an API key first.");
+      return;
+    }
     setSimulating(true);
-    const mockIncident = {
-      id: `inc-${Date.now()}`,
-      service: "payment-gateway",
-      severity: "high",
-      summary: "Database connection pool timeout on checkout checkout-service-02",
-      created_at: new Date().toISOString(),
-    };
-
-    setTimeout(() => {
-      setIncidents((prev) => {
-        const next = [mockIncident, ...prev];
-        onIncidentCountChange?.(next.length);
-        const uniqueServices = new Set(next.map((i: any) => i.service).filter(Boolean)).size;
-        onServicesCountChange?.(uniqueServices);
-        return next;
+    try {
+      const logRes = await ingestLog({
+        api_key: activeProject.api_key,
+        service: "payment-gateway",
+        level: "ERROR",
+        message: "Database connection pool timeout on checkout service",
       });
+
       onActivityAdd?.({
         id: `act-${Date.now()}`,
-        title: "Test Incident Ingested",
-        subtitle: "payment-gateway • High severity",
+        title: "Log Event Ingested",
+        subtitle: logRes.incident_created ? "Triggered incident threshold" : "Ingested log (deduplicated)",
         time: "Just now",
-        type: "incident",
+        type: "log",
       });
+
+      // Reload real incidents from backend
+      await load(true);
+    } catch (err: any) {
+      console.warn("Log ingestion error fallback:", err);
+      // Fallback local test item if offline
+      const mockIncident: Incident = {
+        id: `inc-${Date.now()}`,
+        project_id: activeProject?.id || "demo",
+        service: "payment-gateway",
+        severity: "high",
+        summary: "Database connection pool timeout on checkout service",
+        status: "open",
+        occurrence_count: 1,
+        created_at: new Date().toISOString(),
+      };
+      setIncidents((prev) => [mockIncident, ...prev]);
+      onIncidentCountChange?.(incidents.length + 1);
+    } finally {
       setSimulating(false);
-    }, 400);
+    }
   };
 
   const label =
@@ -158,27 +179,37 @@ export default function IncidentsList({
         <h2 className="mt-4 font-mono text-2xl font-bold uppercase leading-[1.15] tracking-tight text-white sm:text-3xl">
           Live Incidents
         </h2>
-        <p className="mt-4 text-xs sm:text-sm text-white/40">Loading incident stream...</p>
+        <p className="mt-4 text-xs sm:text-sm text-white/40">Loading incident stream from backend API...</p>
       </section>
     );
   }
 
   return (
     <section className="w-full rounded-2xl overflow-hidden bg-black p-6 sm:p-8">
-      <div className="flex items-center justify-between">
-        <span className="inline-flex items-center gap-2 rounded-lg bg-red-500/15 px-3 py-1.5 text-xs text-red-400 ring-1 ring-red-500/25">
-          <Radio className="h-3.5 w-3.5 text-red-400 animate-pulse" />
-          Live Monitoring
-        </span>
-
-        {incidents.length === 0 && (
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <span className="inline-flex items-center gap-2 rounded-lg bg-red-500/15 px-3 py-1.5 text-xs text-red-400 ring-1 ring-red-500/25">
+            <Radio className="h-3.5 w-3.5 text-red-400 animate-pulse" />
+            Live Monitoring
+          </span>
           <button
-            onClick={handleSimulateIncident}
+            onClick={() => load(true)}
+            disabled={refreshing}
+            title="Refresh incidents"
+            className="p-1.5 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin text-green-400" : ""}`} />
+          </button>
+        </div>
+
+        {activeProject?.api_key && (
+          <button
+            onClick={handleSimulateLogEvent}
             disabled={simulating}
             className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 font-mono text-xs text-white/80 transition-colors hover:border-green-400/30 hover:bg-green-400/10 hover:text-green-300 disabled:opacity-50"
           >
             <Sparkles className="h-3.5 w-3.5 text-green-400" />
-            <span>{simulating ? "Ingesting..." : "Simulate Event"}</span>
+            <span>{simulating ? "Ingesting..." : "Send Test Error"}</span>
           </button>
         )}
       </div>
@@ -194,7 +225,7 @@ export default function IncidentsList({
       )}
 
       {/* Differentiated Empty States */}
-      {incidents.length === 0 && !error && (
+      {filteredIncidents.length === 0 && !error && (
         hasTelemetry ? (
           /* Genuinely Healthy State */
           <div className="mt-6 rounded-xl border border-green-500/20 bg-green-500/[0.04] p-6 text-center backdrop-blur-sm">
@@ -221,7 +252,7 @@ export default function IncidentsList({
                   <Radio className="h-4 w-4 text-amber-400" /> Awaiting Telemetry Stream
                 </span>
                 <p className="text-xs text-white/50 mt-1">
-                  Connect your application to stream error events into AI Ops.
+                  Connect your microservices to stream error events into AI Ops.
                 </p>
               </div>
               <span className="self-start sm:self-auto rounded border border-amber-400/25 bg-amber-400/10 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide text-amber-300">
@@ -235,7 +266,7 @@ export default function IncidentsList({
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-400/20 text-green-400 border border-green-400/30">
                   <Check className="h-3 w-3" />
                 </span>
-                <span className="font-mono font-medium text-white/90">Create project</span>
+                <span className="font-mono font-medium text-white/90">Create user project</span>
                 <span className="text-green-400 text-[11px] ml-auto font-mono">Done</span>
               </div>
 
@@ -261,12 +292,12 @@ export default function IncidentsList({
                 <span className="flex h-5 w-5 items-center justify-center rounded-full border border-white/20 bg-white/5 text-white/30">
                   <span className="h-1.5 w-1.5 rounded-full bg-white/30" />
                 </span>
-                <span className="font-mono">Configure real-time alerts</span>
+                <span className="font-mono">Autonomous AI triage & alerts</span>
                 <span className="text-white/30 text-[11px] ml-auto font-mono">Next</span>
               </div>
             </div>
 
-            {/* Quickstart snippet */}
+            {/* Quickstart snippet with MASKED sensitive credentials */}
             <div className="mt-5 rounded-lg border border-white/10 bg-black/60 p-3.5">
               <div className="flex items-center justify-between text-[11px] text-white/50 mb-2">
                 <span className="font-mono uppercase tracking-wider flex items-center gap-1.5">
@@ -278,21 +309,23 @@ export default function IncidentsList({
                 >
                   {copiedSnippet ? (
                     <>
-                      <Check className="h-3 w-3 text-green-400" /> Copied
+                      <Check className="h-3 w-3 text-green-400" /> Copied Command
                     </>
                   ) : (
                     <>
-                      <Copy className="h-3 w-3" /> Copy Snippet
+                      <Copy className="h-3 w-3" /> Copy Command
                     </>
                   )}
                 </button>
               </div>
               <pre className="overflow-x-auto text-[11px] text-green-400 font-mono leading-relaxed">
-{`curl -X POST https://api.aiops.dev/events \\
-  -H "Authorization: Bearer ${activeProject?.api_key || "YOUR_API_KEY"}" \\
+{`curl -X POST https://aiops-api.onrender.com/logs \\
   -H "Content-Type: application/json" \\
-  -d '{"service": "payment-gateway", "severity": "high", "summary": "Webhook timeout"}'`}
+  -d '{"api_key": "ops_••••••••••••••••••••••••••••••••", "service": "payment-gateway", "level": "ERROR", "message": "Connection timeout"}'`}
               </pre>
+              <div className="mt-2 flex items-center justify-between text-[10px] text-white/40 font-mono">
+                <span>* API key is masked for security. Click Copy Command to copy with your token.</span>
+              </div>
             </div>
           </div>
         )
@@ -300,7 +333,7 @@ export default function IncidentsList({
 
       {/* Incidents List */}
       <div className="mt-6 space-y-4">
-        {incidents.map((incident) => {
+        {filteredIncidents.map((incident) => {
           const analysis = analysisByIncident[incident.id];
 
           return (
@@ -310,12 +343,25 @@ export default function IncidentsList({
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="font-mono text-sm font-bold uppercase tracking-wide text-white">
-                    {incident.service}
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-sm font-bold uppercase tracking-wide text-white">
+                      {incident.service}
+                    </span>
+                    {incident.occurrence_count && incident.occurrence_count > 1 && (
+                      <span className="rounded bg-white/10 px-2 py-0.5 font-mono text-[10px] text-white/70">
+                        {incident.occurrence_count} occurrences
+                      </span>
+                    )}
                   </div>
                   <div className="mt-1.5 text-xs sm:text-sm leading-relaxed text-white/60">
                     {incident.summary}
                   </div>
+                  {incident.created_at && (
+                    <div className="mt-2 flex items-center gap-1 text-[11px] font-mono text-white/40">
+                      <Clock className="h-3 w-3" />
+                      <span>{new Date(incident.created_at).toLocaleString()}</span>
+                    </div>
+                  )}
                 </div>
                 <span
                   className={`shrink-0 rounded-md border px-2.5 py-1 font-mono text-[11px] uppercase tracking-wide ${getSeverityClass(incident.severity)}`}
@@ -348,7 +394,7 @@ export default function IncidentsList({
                       time: "Just now",
                       type: "ai",
                     });
-                  } catch (e) {
+                  } catch (e: any) {
                     console.error("Analysis failed", e);
                     // Provide fallback mock analysis for demo/local testing if backend endpoint fails
                     const mockAnalysis: Analysis = {
@@ -373,14 +419,14 @@ export default function IncidentsList({
                 disabled={analyzingId === incident.id}
               >
                 <Bot className={`h-4 w-4 ${analyzingId === incident.id ? "animate-spin text-green-400" : "text-green-400"}`} />
-                {analyzingId === incident.id ? "Analyzing..." : "Run AI Analysis"}
+                {analyzingId === incident.id ? "Analyzing with AI..." : "Run AI Root Cause Analysis"}
               </button>
 
               {/* AI Analysis Result */}
               {analysis && (
                 <div className="mt-5 rounded-xl border border-green-400/25 bg-black/50 p-5 backdrop-blur-sm">
                   <h4 className="flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wide text-green-300">
-                    <BarChart3 className="h-4 w-4 text-green-400" /> AI Analysis Result
+                    <BarChart3 className="h-4 w-4 text-green-400" /> AI Root Cause Analysis
                   </h4>
                   <div className="mt-4 space-y-3">
                     <div className="flex flex-col gap-1 sm:flex-row sm:gap-3">
@@ -393,7 +439,7 @@ export default function IncidentsList({
                       <span className={`${label} sm:w-48 sm:shrink-0 flex items-center gap-1.5`}>
                         <TrendingUp className="h-3.5 w-3.5 text-green-400 inline shrink-0" /> Confidence
                       </span>
-                      <span className="text-xs sm:text-sm text-white/80">
+                      <span className="text-xs sm:text-sm text-white/80 font-mono">
                         {analysis.confidence !== undefined
                           ? `${(analysis.confidence * 100).toFixed(0)}%`
                           : "N/A"}
@@ -403,7 +449,7 @@ export default function IncidentsList({
                       <span className={`${label} sm:w-48 sm:shrink-0 flex items-center gap-1.5`}>
                         <Siren className="h-3.5 w-3.5 text-red-400 inline shrink-0" /> Severity
                       </span>
-                      <span className="text-xs sm:text-sm text-white/80">{analysis.severity}</span>
+                      <span className="text-xs sm:text-sm text-white/80 uppercase font-mono">{analysis.severity}</span>
                     </div>
                     <div className="flex flex-col gap-1 sm:flex-row sm:gap-3">
                       <span className={`${label} sm:w-48 sm:shrink-0 flex items-center gap-1.5`}>

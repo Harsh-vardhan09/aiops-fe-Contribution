@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Activity,
   HeartPulse,
@@ -11,7 +12,9 @@ import {
   Database,
   KeyRound,
   Bot,
+  RefreshCw,
 } from "lucide-react";
+import { checkHealth } from "../../api/backend";
 
 export interface ActivityItem {
   id: string;
@@ -40,6 +43,31 @@ export default function RightRail({
   activities = [],
   hasActiveApiKey = false,
 }: RightRailProps) {
+  const [probeStatus, setProbeStatus] = useState<"Connected" | "Checking" | "Offline">("Checking");
+  const [isChecking, setIsChecking] = useState(false);
+
+  const verifyProbe = async () => {
+    setIsChecking(true);
+    try {
+      const res = await checkHealth();
+      if (res && res.status === "ok") {
+        setProbeStatus("Connected");
+      } else {
+        setProbeStatus("Offline");
+      }
+    } catch {
+      setProbeStatus("Offline");
+    } finally {
+      setIsChecking(false);
+    }
+  };
+
+  useEffect(() => {
+    verifyProbe();
+    const interval = setInterval(verifyProbe, 45000);
+    return () => clearInterval(interval);
+  }, []);
+
   const getActivityIcon = (type: ActivityItem["type"]) => {
     switch (type) {
       case "ai":
@@ -119,8 +147,24 @@ export default function RightRail({
               System Health
             </h3>
           </div>
-          <span className="flex items-center gap-1.5 rounded-full border border-green-400/30 bg-green-400/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-green-300">
-            <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
+          <span
+            className={`flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide ${
+              systemHealth === "healthy"
+                ? "border-green-400/30 bg-green-400/10 text-green-300"
+                : systemHealth === "degraded"
+                ? "border-amber-400/30 bg-amber-400/10 text-amber-300"
+                : "border-red-400/30 bg-red-400/10 text-red-300"
+            }`}
+          >
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                systemHealth === "healthy"
+                  ? "bg-green-400"
+                  : systemHealth === "degraded"
+                  ? "bg-amber-400 animate-pulse"
+                  : "bg-red-400 animate-pulse"
+              }`}
+            />
             {systemHealth === "healthy"
               ? "Healthy"
               : systemHealth === "degraded"
@@ -137,7 +181,26 @@ export default function RightRail({
         </div>
         <div className="mt-2 flex items-center justify-between text-xs">
           <span className="text-white/50">Backend Probe</span>
-          <span className="font-mono text-green-400">Connected</span>
+          <div className="flex items-center gap-1.5">
+            <span
+              className={`font-mono ${
+                probeStatus === "Connected"
+                  ? "text-green-400"
+                  : probeStatus === "Checking"
+                  ? "text-amber-400"
+                  : "text-red-400"
+              }`}
+            >
+              {probeStatus}
+            </span>
+            <button
+              onClick={verifyProbe}
+              title="Re-check probe"
+              className="text-white/30 hover:text-white transition-colors"
+            >
+              <RefreshCw className={`h-3 w-3 ${isChecking ? "animate-spin" : ""}`} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -160,7 +223,7 @@ export default function RightRail({
               </p>
             </div>
           ) : (
-            activities.slice(0, 4).map((act) => (
+            activities.slice(0, 5).map((act) => (
               <div
                 key={act.id}
                 className="flex items-start gap-3 rounded-xl border border-white/5 bg-black/40 p-3 transition-colors hover:border-white/15"
@@ -170,7 +233,7 @@ export default function RightRail({
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-1">
-                    <span className="font-mono text-xs font-bold text-white">
+                    <span className="font-mono text-xs font-bold text-white truncate">
                       {act.title}
                     </span>
                     <span className="font-mono text-[10px] text-white/40 shrink-0 ml-1">
@@ -229,7 +292,7 @@ export default function RightRail({
               </div>
               <div className={`text-[10px] flex items-center gap-1 ${hasActiveApiKey ? "text-green-400" : "text-white/40"}`}>
                 <span className={`h-1 w-1 rounded-full ${hasActiveApiKey ? "bg-green-400" : "bg-white/30"}`} />
-                {hasActiveApiKey ? "Configured" : "Pending"}
+                {hasActiveApiKey ? "Configured" : "No Keys"}
               </div>
             </div>
           </div>
