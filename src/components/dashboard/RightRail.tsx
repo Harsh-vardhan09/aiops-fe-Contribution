@@ -13,6 +13,8 @@ import {
   KeyRound,
   Bot,
   RefreshCw,
+  X,
+  CloudSync,
 } from "lucide-react";
 import { checkHealth } from "../../api/backend";
 
@@ -205,7 +207,7 @@ export default function RightRail({
       </div>
 
       {/* Recent Activity Feed */}
-      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:p-5 backdrop-blur-sm">
+      <div id="recent-activity-section" className="scroll-mt-28 rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:p-5 backdrop-blur-sm">
         <div className="flex items-center gap-2 pb-3 border-b border-white/10">
           <Clock className="h-4 w-4 text-green-400" />
           <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-white">
@@ -216,7 +218,7 @@ export default function RightRail({
         <div className="mt-3 flex flex-col gap-2.5">
           {activities.length === 0 ? (
             <div className="py-5 px-3 text-center rounded-xl border border-white/5 bg-black/30">
-              <Clock className="h-4 w-4 text-white/20 mx-auto mb-1.5" />
+              <X className="h-4 w-4 text-white/20 mx-auto mb-1.5" />
               <p className="font-mono text-xs text-white/50">No activity yet</p>
               <p className="text-[11px] text-white/30 mt-0.5 leading-relaxed">
                 Actions in this session will appear here.
@@ -298,7 +300,7 @@ export default function RightRail({
           </div>
 
           <div className="flex items-center gap-2.5 rounded-xl border border-white/5 bg-black/40 p-2.5 text-xs">
-            <Radio className={`h-4 w-4 shrink-0 ${activeIncidents > 0 ? "text-green-400" : "text-amber-400"}`} />
+            <CloudSync className={`h-4 w-4 shrink-0 ${activeIncidents > 0 ? "text-green-400" : "text-amber-400"}`} />
             <div className="min-w-0">
               <div className="font-mono text-[11px] font-bold text-white truncate">
                 Telemetry

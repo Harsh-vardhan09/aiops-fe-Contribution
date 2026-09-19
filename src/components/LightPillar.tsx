@@ -49,22 +49,46 @@ const LightPillar: React.FC<LightPillarProps> = ({
   const pausedRef = useRef(paused);
   pausedRef.current = paused;
   const [webGLSupported, setWebGLSupported] = useState<boolean>(true);
+  const [isMobileScreen, setIsMobileScreen] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    return (
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      window.innerWidth < 1024 ||
+      window.matchMedia('(max-width: 1023px)').matches
+    );
+  });
 
   useEffect(() => {
     pausedRef.current = paused;
   }, [paused]);
 
+  // Check mobile viewport and resize
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        window.innerWidth < 1024 ||
+        window.matchMedia('(max-width: 1023px)').matches;
+      setIsMobileScreen(isMobile);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Check WebGL support
   useEffect(() => {
+    if (isMobileScreen) return;
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
     if (!gl) {
       setWebGLSupported(false);
     }
-  }, []);
+  }, [isMobileScreen]);
 
   useEffect(() => {
-    if (!containerRef.current || !webGLSupported) return;
+    if (!containerRef.current || !webGLSupported || isMobileScreen) return;
 
     const container = containerRef.current;
     const width = container.clientWidth;

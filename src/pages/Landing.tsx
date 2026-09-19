@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import LightPillar from "@/components/LightPillar";
+import { useState, useEffect, lazy, Suspense } from "react";
+const LightPillar = lazy(() => import("@/components/LightPillar"));
 import {
   Rocket,
   Brain,
@@ -114,6 +114,16 @@ export default function Landing({
 }) {
   const isDesktop = useIsDesktop();
   const displayedHeadline = useTypewriter(HEADLINE_TEXT, 32, 150);
+  const [pillarVisible, setPillarVisible] = useState(false);
+
+  useEffect(() => {
+    // Light pillar visible only after transition from dashboard animation finishes (~280ms)
+    const timer = setTimeout(() => {
+      setPillarVisible(true);
+    }, 280);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const handlePrimaryCta = () => {
     onDashboardClick?.();
@@ -164,24 +174,30 @@ export default function Landing({
           </div>
         </div>
 
-        <div className="hidden lg:block relative lg:w-[46%] overflow-hidden pointer-events-none [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]">
+        <div
+          className={`hidden lg:block relative lg:w-[46%] overflow-hidden pointer-events-none [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)] transition-opacity duration-1000 ease-out ${
+            pillarVisible ? "opacity-100" : "opacity-0"
+          }`}
+        >
           {isDesktop && (
-            <LightPillar
-              topColor="#27d036"
-              bottomColor="#d5bdd4"
-              intensity={0.9}
-              rotationSpeed={0.3}
-              glowAmount={0.0014}
-              pillarWidth={1.8}
-              pillarHeight={0.4}
-              noiseIntensity={0.4}
-              pillarRotation={25}
-              interactive={false}
-              mixBlendMode="screen"
-              quality="high"
-              paused={paused}
-              className="filter blur-[0.5px]"
-            />
+            <Suspense fallback={null}>
+              <LightPillar
+                topColor="#27d036"
+                bottomColor="#d5bdd4"
+                intensity={0.9}
+                rotationSpeed={0.3}
+                glowAmount={0.0014}
+                pillarWidth={1.8}
+                pillarHeight={0.4}
+                noiseIntensity={0.4}
+                pillarRotation={25}
+                interactive={false}
+                mixBlendMode="screen"
+                quality="high"
+                paused={paused || !pillarVisible}
+                className="filter blur-[0.5px]"
+              />
+            </Suspense>
           )}
           <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-black via-transparent to-transparent opacity-70" />
           <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-black/30 via-transparent to-black/30" />
@@ -189,7 +205,7 @@ export default function Landing({
       </section>
 
       {/* Features */}
-      <section className="w-full flex flex-col">
+      <section className="w-full flex flex-col pt-6 sm:pt-10">
         <span className="inline-flex items-center gap-2 self-start rounded-lg bg-green-400/15 px-3 py-1.5 text-xs text-green-300 ring-1 ring-green-400/25">
           Built for operations teams
         </span>
@@ -226,7 +242,7 @@ export default function Landing({
       </section>
 
       {/* How It Works & Operational Deep Dive */}
-      <section id="learn-more" className="scroll-mt-24 w-full flex flex-col">
+      <section id="learn-more" className="scroll-mt-24 w-full flex flex-col pt-10 sm:pt-16">
         <span className="inline-flex items-center self-start rounded-lg bg-green-400/15 px-3 py-1.5 text-xs text-green-300 ring-1 ring-green-400/25">
           Intelligent Operations Workflow
         </span>
@@ -350,7 +366,7 @@ export default function Landing({
       </section>
 
       {/* CTA */}
-      <section className="w-full rounded-2xl border border-white/20 bg-gradient-to-br from-green-400/10 to-transparent p-8 sm:p-12 text-center">
+      <section className="w-full rounded-2xl border border-white/20 bg-gradient-to-br from-green-400/10 to-transparent p-8 sm:p-12 text-center mt-10 sm:mt-16">
         <h2 className="mx-auto max-w-2xl font-mono text-2xl font-bold uppercase leading-[1.15] tracking-tight text-white sm:text-3xl">
           Ready to transform your operations?
         </h2>
@@ -368,7 +384,7 @@ export default function Landing({
       </section>
 
       {/* Footer */}
-      <footer className="mt-auto w-full py-6 text-center text-xs sm:text-sm text-white/40">
+      <footer className="mt-8 sm:mt-12 w-full py-6 text-center text-xs sm:text-sm text-white/40">
         <p>&copy; 2026 AI Ops. All rights reserved.</p>
       </footer>
     </>

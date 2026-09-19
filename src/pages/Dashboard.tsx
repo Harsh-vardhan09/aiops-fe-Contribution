@@ -1,65 +1,120 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { fetchProjects, createProject, fetchIncidents, type Project, type Incident } from "../api/backend";
 import { supabase } from "../lib/supabase";
 import IncidentsList from "../components/IncidentsList";
 import LeftRail, { type DashboardProject } from "../components/dashboard/LeftRail";
 import RightRail, { type ActivityItem } from "../components/dashboard/RightRail";
-import { Check, Bolt, Sparkles, Eye, EyeOff, Copy, ShieldCheck, KeyRound, Loader2, FolderGit2, Radio, Activity } from "lucide-react";
+import { getCachedData, setCachedData, isSessionRefreshed, markSessionRefetched } from "../lib/cache";
+import { Check, Bolt, Sparkles, Eye, EyeOff, Copy, ShieldCheck, KeyRound, Loader2, Folder, PanelsTopLeft, Info } from "lucide-react";
 
-export default function Dashboard() {
+export default function Dashboard({
+  onOpenSettings,
+  isSettingsOpen = false,
+  isSignOutMenuOpen = false,
+  isModalOpen = false,
+  userEmail: initialUserEmail,
+}: {
+  onOpenSettings?: () => void;
+  isSettingsOpen?: boolean;
+  isSignOutMenuOpen?: boolean;
+  isModalOpen?: boolean;
+  userEmail?: string;
+} = {}) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [projectName, setProjectName] = useState("");
+  const [userEmail, setUserEmail] = useState<string>(initialUserEmail || "");
   const [isSyncing, setIsSyncing] = useState(true);
   const [isSyncFading, setIsSyncFading] = useState(false);
   const [creatingProject, setCreatingProject] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [showApiKey, setShowApiKey] = useState(false);
-  const [activeQuickAccess, setActiveQuickAccess] = useState("incidents");
   const [selectedProjectIdFilter, setSelectedProjectIdFilter] = useState<string | null>(null);
+  const [showAllChip, setShowAllChip] = useState(true);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
 
-  // Mobile carousel slide state: 0 = Left Rail, 1 = Center Stage (default), 2 = Right Rail
-  const [mobileSlide, setMobileSlide] = useState<number>(1);
-  const [touchDeltaX, setTouchDeltaX] = useState<number>(0);
-  const [isSwiping, setIsSwiping] = useState<boolean>(false);
+  // Helper to sort projects newest first (created_at descending)
+  const sortProjectsNewestFirst = (list: Project[]): Project[] => {
+    return [...list].sort((a, b) => {
+      const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return timeB - timeA;
+    });
+  };
 
-  const touchStartX = useRef<number | null>(null);
-  const touchStartY = useRef<number | null>(null);
+  // Mobile carousel slide state: 0 = Left Rail (Projects), 1 = Center Stage (Workspace - default), 2 = Right Rail (System)
+  const [mobileSlide, setMobileSlide] = useState<number>(1);
   const createInputRef = useRef<HTMLInputElement>(null);
 
   const addActivity = useCallback((act: ActivityItem) => {
     setActivities((prev) => [act, ...prev.slice(0, 8)]);
   }, []);
 
-  // Fetch projects and incidents directly from backend API (per authenticated user)
-  const loadData = useCallback(async () => {
+  // Fetch projects and incidents directly from backend API (per authenticated user) with offline caching
+  const loadData = useCallback(async (forceRefresh = false) => {
     try {
-      setIsSyncing(true);
-      setIsSyncFading(false);
       setError(null);
 
       const { data } = await supabase.auth.getSession();
-      if (!data.session) {
+      const sessionUser = data.session?.user;
+      const userId = sessionUser?.id;
+      const email = sessionUser?.email;
+      if (email) setUserEmail(email);
+
+      if (!data.session || !userId) {
         setError("User session not found. Please log in.");
         setIsSyncing(false);
         return;
       }
 
+      // If offline cache exists and this is not a fresh page reload (SPA route change), load instantly
+      const isReload = isSessionRefreshed();
+      if (!isReload && !forceRefresh) {
+        const cachedProjects = getCachedData<Project[]>(userId, "projects");
+        const cachedIncidents = getCachedData<Incident[]>(userId, "incidents");
+
+        if (cachedProjects && cachedIncidents) {
+          const sortedCachedProjects = sortProjectsNewestFirst(cachedProjects);
+          setProjects(sortedCachedProjects);
+          setIncidents(cachedIncidents);
+
+          if (sortedCachedProjects.length > 0) {
+            setActiveProject((current) => {
+              if (current) {
+                const found = sortedCachedProjects.find((p) => p.id === current.id);
+                if (found) return found;
+              }
+              return sortedCachedProjects[0];
+            });
+          } else {
+            setActiveProject(null);
+          }
+
+          setIsSyncing(false);
+          setIsSyncFading(false);
+          return;
+        }
+      }
+
+      setIsSyncing(true);
+      setIsSyncFading(false);
+
       // 1. Fetch user-scoped projects from backend
       const fetchedProjects = await fetchProjects();
-      setProjects(fetchedProjects || []);
+      const sortedProjects = sortProjectsNewestFirst(fetchedProjects || []);
+      setProjects(sortedProjects);
 
-      if (fetchedProjects && fetchedProjects.length > 0) {
+      if (sortedProjects && sortedProjects.length > 0) {
         // Keep current active project or default to first
         setActiveProject((current) => {
           if (current) {
-            const found = fetchedProjects.find((p) => p.id === current.id);
+            const found = sortedProjects.find((p) => p.id === current.id);
             if (found) return found;
           }
-          return fetchedProjects[0];
+          return sortedProjects[0];
         });
       } else {
         setActiveProject(null);
@@ -69,10 +124,15 @@ export default function Dashboard() {
       const fetchedIncidents = await fetchIncidents();
       setIncidents(fetchedIncidents || []);
 
+      // Store in isolated user cache
+      setCachedData(userId, "projects", sortedProjects || []);
+      setCachedData(userId, "incidents", fetchedIncidents || []);
+      markSessionRefetched();
+
       addActivity({
         id: `act-${Date.now()}`,
         title: "Session Synchronized",
-        subtitle: `Loaded ${fetchedProjects.length} project(s) & ${fetchedIncidents.length} incident(s)`,
+        subtitle: `Loaded ${sortedProjects.length} project(s) & ${fetchedIncidents.length} incident(s)`,
         time: "Just now",
         type: "health",
       });
@@ -102,8 +162,10 @@ export default function Dashboard() {
     setError(null);
     try {
       const created = await createProject(projectName.trim());
-      setProjects((prev) => [created, ...prev]);
+      setProjects((prev) => sortProjectsNewestFirst([created, ...prev]));
       setActiveProject(created);
+      setSelectedProjectIdFilter(created.id);
+      setShowAllChip(false);
       setProjectName("");
 
       addActivity({
@@ -132,13 +194,14 @@ export default function Dashboard() {
   const handleNewProjectClick = () => {
     setMobileSlide(1);
     setTimeout(() => {
-      createInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      createInputRef.current?.focus();
-    }, 150);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      createInputRef.current?.focus({ preventScroll: true });
+    }, 100);
   };
 
-  // Convert Project to DashboardProject with computed incident counts & status
-  const dashboardProjects: DashboardProject[] = projects.map((p) => {
+  // Convert Project to DashboardProject with computed incident counts & status (sorted newest first)
+  const sortedProjects = sortProjectsNewestFirst(projects);
+  const dashboardProjects: DashboardProject[] = sortedProjects.map((p) => {
     const projectIncidents = incidents.filter((inc) => inc.project_id === p.id);
     const incCount = projectIncidents.length;
     const isDegraded = projectIncidents.some(
@@ -167,70 +230,90 @@ export default function Dashboard() {
     ? activeProject.api_key.slice(0, 4) + "•".repeat(Math.max(16, activeProject.api_key.length - 8)) + activeProject.api_key.slice(-4)
     : "••••••••••••••••••••••••••••••••";
 
-  // Touch handlers for mobile horizontal swipe
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-    setIsSwiping(false);
-    setTouchDeltaX(0);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStartX.current === null || touchStartY.current === null) return;
-    const currentX = e.touches[0].clientX;
-    const currentY = e.touches[0].clientY;
-    const diffX = currentX - touchStartX.current;
-    const diffY = currentY - touchStartY.current;
-
-    // Trigger horizontal swipe if horizontal movement is greater than vertical movement
-    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 8) {
-      setIsSwiping(true);
-      setTouchDeltaX(diffX);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (touchStartX.current !== null && isSwiping) {
-      if (touchDeltaX < -45 && mobileSlide < 2) {
-        setMobileSlide((prev) => prev + 1);
-      } else if (touchDeltaX > 45 && mobileSlide > 0) {
-        setMobileSlide((prev) => prev - 1);
-      }
-    }
-    touchStartX.current = null;
-    touchStartY.current = null;
-    setIsSwiping(false);
-    setTouchDeltaX(0);
-  };
 
   if (isSyncing) {
     return (
       <div
-        className={`w-full flex min-h-[450px] items-center justify-center transition-all duration-200 ease-out ${
-          isSyncFading ? "opacity-0 scale-95 filter blur-xs" : "opacity-100 scale-100 filter blur-none"
-        }`}
+        className={`w-full flex min-h-[450px] items-center justify-center transition-all duration-200 ease-out ${isSyncFading ? "opacity-0 scale-95 filter blur-xs" : "opacity-100 scale-100 filter blur-none"
+          }`}
       >
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-7 w-7 animate-spin text-green-400" />
           <p className="font-mono text-xs uppercase tracking-wider text-white/50">
-            Synchronizing user projects & incidents...
+            Synchronizing Projects
           </p>
         </div>
       </div>
     );
   }
 
+  const scrollToTargetSection = (target: "incidents" | "activity") => {
+    const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
+    const sectionId = target === "incidents" ? "live-incidents-section" : "recent-activity-section";
+
+    const performScroll = () => {
+      // Find all elements with this section ID
+      const elements = Array.from(document.querySelectorAll<HTMLElement>(`[id="${sectionId}"]`));
+
+      // Select the element that is actually inside the active visible layout
+      let targetEl: HTMLElement | null = null;
+      for (const el of elements) {
+        const isInsideDesktop = !!el.closest(".desktop-layout-container");
+        const isInsideMobile = !!el.closest(".mobile-layout-container");
+
+        if (isDesktop && isInsideDesktop) {
+          targetEl = el;
+          break;
+        } else if (!isDesktop && isInsideMobile) {
+          targetEl = el;
+          break;
+        }
+      }
+
+      // Fallback: pick any visible element
+      if (!targetEl) {
+        targetEl = elements.find((el) => el.offsetParent !== null || el.getBoundingClientRect().height > 0) || elements[0] || null;
+      }
+
+      if (targetEl) {
+        const navOffset = 90; // Fixed navbar clearance
+        const elementRect = targetEl.getBoundingClientRect();
+        const currentScrollY = window.pageYOffset || document.documentElement.scrollTop;
+        const targetY = elementRect.top + currentScrollY - navOffset;
+
+        window.scrollTo({
+          top: Math.max(0, targetY),
+          behavior: "smooth",
+        });
+      }
+    };
+
+    if (isDesktop) {
+      // On desktop, execute immediately
+      performScroll();
+    } else {
+      // On mobile, switch to the proper slide first (1 = Workspace, 2 = System)
+      const targetSlide = target === "incidents" ? 1 : 2;
+      setMobileSlide(targetSlide);
+      // Wait for slide translation animation to start and complete before settling scroll
+      setTimeout(performScroll, 50);
+      setTimeout(performScroll, 360);
+    }
+  };
+
   // Left Rail Component
   const renderLeftRail = () => (
     <LeftRail
       projects={dashboardProjects}
-      activeProjectId={activeProject?.id || null}
+      activeProjectId={selectedProjectIdFilter}
       onSelectProject={(proj) => {
         const matched = projects.find((p) => p.id === proj.id) || null;
         setActiveProject(matched);
         setSelectedProjectIdFilter(proj.id);
-        // On mobile, selecting a project takes you to the center view!
+        setShowAllChip(false);
+        // On mobile, selecting a project takes you to the center view and scrolls to top!
         setMobileSlide(1);
+        window.scrollTo({ top: 0, behavior: "smooth" });
         addActivity({
           id: `act-${Date.now()}`,
           title: "Switched Context",
@@ -240,19 +323,21 @@ export default function Dashboard() {
         });
       }}
       onNewProjectClick={handleNewProjectClick}
-      activeQuickAccess={activeQuickAccess}
       onSelectQuickAccess={(key) => {
-        setActiveQuickAccess(key);
         if (key === "projects") {
           handleNewProjectClick();
         } else if (key === "incidents") {
           setSelectedProjectIdFilter(null);
-          setMobileSlide(1);
-        } else if (key === "analysis") {
-          setMobileSlide(1);
+          setShowAllChip(true);
+          scrollToTargetSection("incidents");
+        } else if (key === "activity") {
+          scrollToTargetSection("activity");
+        } else if (key === "settings") {
+          onOpenSettings?.();
         }
       }}
       incidentCount={activeIncidentsCount}
+      isSettingsOpen={isSettingsOpen}
     />
   );
 
@@ -261,15 +346,18 @@ export default function Dashboard() {
     <main className="w-full max-w-[920px] flex flex-col gap-6 shrink-1 min-w-0">
       {/* Create Project Section */}
       <section className="w-full rounded-2xl overflow-hidden bg-black p-5 sm:p-8 border border-white/10">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <span className="inline-flex items-center gap-2 rounded-lg bg-green-400/15 px-3 py-1.5 text-xs text-green-300 ring-1 ring-green-400/25">
             <Bolt className="h-3.5 w-3.5 text-green-400" />
-            Project Setup
+            <span className="compact-hide">Project Setup</span>
           </span>
 
-          {activeProject && (
-            <span className="font-mono text-xs text-white/50">
-              Active: <strong className="text-white">{activeProject.name}</strong>
+          {userEmail && (
+            <span
+              className="lg:hidden font-mono text-xs text-white/50 truncate max-w-[160px] sm:max-w-[240px]"
+              title={userEmail}
+            >
+              {userEmail}
             </span>
           )}
         </div>
@@ -319,10 +407,10 @@ export default function Dashboard() {
             <div className="flex items-center justify-between gap-3">
               <h3 className="flex items-center gap-2 font-mono text-xs sm:text-sm font-bold uppercase tracking-wide text-green-300">
                 <ShieldCheck className="h-4 w-4 text-green-400 shrink-0" />
-                API Credentials • {activeProject.name}
+                API Credentials
               </h3>
               <span className="flex items-center gap-1 rounded bg-green-400/10 px-2 py-0.5 font-mono text-[10px] uppercase text-green-300 border border-green-400/20">
-                <KeyRound className="h-3 w-3" /> Encrypted
+                <KeyRound className="h-3 w-3" /> <span className="compact-hide">Encrypted</span>
               </span>
             </div>
 
@@ -349,11 +437,11 @@ export default function Dashboard() {
                   >
                     {showApiKey ? (
                       <>
-                        <EyeOff className="h-3.5 w-3.5 text-white/60" /> Hide
+                        <EyeOff className="h-3.5 w-3.5 text-white/60" /> <span className="compact-hide">Hide</span>
                       </>
                     ) : (
                       <>
-                        <Eye className="h-3.5 w-3.5 text-white/60" /> Reveal
+                        <Eye className="h-3.5 w-3.5 text-white/60" /> <span className="compact-hide">Reveal</span>
                       </>
                     )}
                   </button>
@@ -361,14 +449,15 @@ export default function Dashboard() {
                   <button
                     onClick={handleCopyApiKey}
                     className="inline-flex items-center gap-1 rounded-md border border-white/15 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                    title="Copy API Key"
                   >
                     {copyFeedback ? (
                       <>
-                        <Check className="h-3.5 w-3.5 text-green-400" /> Copied
+                        <Check className="h-3.5 w-3.5 text-green-400" /> <span className="compact-hide">Copied</span>
                       </>
                     ) : (
                       <>
-                        <Copy className="h-3.5 w-3.5 text-white/60" /> Copy Key
+                        <Copy className="h-3.5 w-3.5 text-white/60" /> <span className="compact-hide">Copy Key</span>
                       </>
                     )}
                   </button>
@@ -392,6 +481,7 @@ export default function Dashboard() {
         activeProject={activeProject}
         selectedProjectId={selectedProjectIdFilter}
         onActivityAdd={addActivity}
+        showAllChip={showAllChip}
       />
     </main>
   );
@@ -412,9 +502,9 @@ export default function Dashboard() {
   return (
     <div className="w-full flex flex-col gap-6 animate-dashboard-fade">
       {/* 1. Desktop 3-Column Layout (Hidden on Mobile) */}
-      <div className="hidden lg:flex w-full flex-row justify-center items-start gap-6 xl:gap-8 mx-auto">
+      <div className="hidden lg:flex desktop-layout-container w-full flex-row justify-center items-start gap-6 xl:gap-8 mx-auto">
         {/* Left Rail: Navigation / Project Context */}
-        <aside className="w-[280px] xl:w-[310px] 2xl:w-[320px] shrink-0 sticky top-24 space-y-4">
+        <aside className="w-[280px] xl:w-[310px] 2xl:w-[320px] shrink-0 sticky top-[106px] lg:top-[110px] space-y-4">
           {renderLeftRail()}
         </aside>
 
@@ -422,111 +512,105 @@ export default function Dashboard() {
         {renderCenterStage()}
 
         {/* Right Rail: System Context & Monitoring */}
-        <aside className="w-[280px] xl:w-[310px] 2xl:w-[320px] shrink-0 sticky top-24 space-y-4">
+        <aside className="w-[280px] xl:w-[310px] 2xl:w-[320px] shrink-0 sticky top-[106px] lg:top-[110px] space-y-4">
           {renderRightRail()}
         </aside>
       </div>
 
-      {/* 2. Mobile Peeking Rail Carousel View (Hidden on Desktop) */}
-      <div className="block lg:hidden w-full overflow-hidden -mx-4 sm:-mx-6 w-[calc(100%+2rem)] sm:w-[calc(100%+3rem)]">
-        {/* Mobile Stage Selector Indicator */}
-        <div className="flex items-center justify-center gap-2 pb-4 font-mono text-[11px] uppercase tracking-wider px-4">
-          <button
-            onClick={() => setMobileSlide(0)}
-            className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${
-              mobileSlide === 0
-                ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
-                : "text-white/40 hover:text-white/70 border border-transparent"
-            }`}
-          >
-            <FolderGit2 className="h-3 w-3" />
-            <span>Projects</span>
-          </button>
-
-          <button
-            onClick={() => setMobileSlide(1)}
-            className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${
-              mobileSlide === 1
-                ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
-                : "text-white/40 hover:text-white/70 border border-transparent"
-            }`}
-          >
-            <Radio className="h-3 w-3 text-green-400" />
-            <span>Workspace</span>
-          </button>
-
-          <button
-            onClick={() => setMobileSlide(2)}
-            className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${
-              mobileSlide === 2
-                ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
-                : "text-white/40 hover:text-white/70 border border-transparent"
-            }`}
-          >
-            <Activity className="h-3 w-3" />
-            <span>System</span>
-          </button>
-        </div>
-
-        {/* Swipeable Carousel Track Container with Mathematically Symmetrical Peeking */}
-        <div
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          className="relative w-full overflow-hidden py-1 touch-pan-y"
-        >
+      {/* 2. Mobile Full-Width Rail Carousel View (Hidden on Desktop) */}
+      <div className="block lg:hidden mobile-layout-container w-full pb-28">
+        {/* Carousel Track with Full-Width Translation Animation (Driven purely by buttons, swiping disabled) */}
+        <div className="w-full min-w-0 max-w-full overflow-hidden">
           <div
-            className="flex items-start transition-transform duration-300 ease-out"
+            className="flex items-start w-full"
             style={{
-              // 80% slide width + 3% gap = 83% step. 10% base offset centers the active slide with 7% peek on both sides!
-              transform: `translateX(calc(10% - ${mobileSlide * 83}% + ${touchDeltaX}px))`,
-              transition: isSwiping ? "none" : "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+              transform: `translate3d(-${mobileSlide * 100}%, 0, 0)`,
+              transition: "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
             }}
           >
             {/* Slide 0: Left Rail (Projects) */}
-            <div
-              onClick={() => mobileSlide !== 0 && setMobileSlide(0)}
-              className={`w-[80%] shrink-0 transition-all duration-300 ease-out ${
-                mobileSlide === 0
-                  ? "scale-100 opacity-100 z-20 pointer-events-auto"
-                  : "scale-y-[0.93] scale-x-[0.96] opacity-45 z-10 cursor-pointer pointer-events-auto"
-              }`}
-            >
+            <div className="w-full min-w-full shrink-0">
               {renderLeftRail()}
             </div>
 
-            {/* Symmetrical Gap */}
-            <div className="w-[3%] shrink-0" />
-
             {/* Slide 1: Center Stage (Workspace - Default on Mobile) */}
-            <div
-              onClick={() => mobileSlide !== 1 && setMobileSlide(1)}
-              className={`w-[80%] shrink-0 transition-all duration-300 ease-out ${
-                mobileSlide === 1
-                  ? "scale-100 opacity-100 z-20 pointer-events-auto"
-                  : "scale-y-[0.93] scale-x-[0.96] opacity-45 z-10 cursor-pointer pointer-events-auto"
-              }`}
-            >
+            <div className="w-full min-w-full shrink-0">
               {renderCenterStage()}
             </div>
 
-            {/* Symmetrical Gap */}
-            <div className="w-[3%] shrink-0" />
-
             {/* Slide 2: Right Rail (System) */}
-            <div
-              onClick={() => mobileSlide !== 2 && setMobileSlide(2)}
-              className={`w-[80%] shrink-0 transition-all duration-300 ease-out ${
-                mobileSlide === 2
-                  ? "scale-100 opacity-100 z-20 pointer-events-auto"
-                  : "scale-y-[0.93] scale-x-[0.96] opacity-45 z-10 cursor-pointer pointer-events-auto"
-              }`}
-            >
+            <div className="w-full min-w-full shrink-0">
               {renderRightRail()}
             </div>
           </div>
         </div>
       </div>
+
+      {/* 3. Floating Bottom Nav Overlay (Portaled directly to document.body for true viewport anchoring) */}
+      {typeof document !== "undefined" &&
+        (() => {
+          const isBottomNavHidden = Boolean(isSettingsOpen || isModalOpen || isSignOutMenuOpen);
+          return createPortal(
+            <nav
+              id="bottom-nav"
+              aria-label="Mobile stage navigation"
+              className={`fixed bottom-5 sm:bottom-6 left-0 right-0 z-40 flex justify-center pointer-events-none px-4 lg:hidden transition-all duration-300 ease-out ${
+                isBottomNavHidden
+                  ? "opacity-0 translate-y-12 scale-95 pointer-events-none"
+                  : "opacity-100 translate-y-0 scale-100"
+              }`}
+            >
+              <div
+                className={`pointer-events-auto bottom-nav-blur bg-black/70 border border-white/15 rounded-full p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.7)] flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider transition-all duration-300 ${
+                  isSignOutMenuOpen ? "page-blurred" : "page-unblurred"
+                }`}
+              >
+              <button
+                onClick={() => {
+                  setMobileSlide(0);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${mobileSlide === 0
+                  ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
+                  : "text-white/40 hover:text-white/70 border border-transparent"
+                  }`}
+              >
+                <Folder className="h-3.5 w-3.5" />
+                <span className="compact-hide">Projects</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setMobileSlide(1);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${mobileSlide === 1
+                  ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
+                  : "text-white/40 hover:text-white/70 border border-transparent"
+                  }`}
+              >
+                <PanelsTopLeft className="h-3.5 w-3.5" />
+                <span className="compact-hide">Workspace</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setMobileSlide(2);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${mobileSlide === 2
+                  ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
+                  : "text-white/40 hover:text-white/70 border border-transparent"
+                  }`}
+              >
+                <Info className="h-3.5 w-3.5" />
+                <span className="compact-hide">System</span>
+              </button>
+            </div>
+            </nav>,
+            document.body
+          );
+        })()}
 
       {/* Footer */}
       <footer className="mt-auto w-full py-6 text-center text-xs sm:text-sm text-white/40">
