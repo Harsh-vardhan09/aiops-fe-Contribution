@@ -22,8 +22,24 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSettingsClosing, setIsSettingsClosing] = useState(false);
   const [isDashboardExiting, setIsDashboardExiting] = useState(false);
+  const [isOnline, setIsOnline] = useState<boolean>(() => {
+    return typeof navigator !== "undefined" ? navigator.onLine : true;
+  });
   const navTimeoutRef = useRef<number | null>(null);
   const currentPageRef = useRef<PageState>("landing");
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     // Initialize compact buttons state on mount
@@ -224,7 +240,18 @@ export default function App() {
   const isModalOpen = (currentPage === "auth" && !isAuthClosing) || (isSettingsOpen && !isSettingsClosing);
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-black text-white">
+    <div
+      className={`relative min-h-screen flex flex-col text-white transition-[background-color] duration-700 ease-in-out ${
+        !isOnline ? "bg-[#100303]" : "bg-black"
+      }`}
+    >
+      {/* Offline Ambient Red Glow Overlay (mirrors navbar's red alert aura) */}
+      <div
+        className={`fixed inset-0 pointer-events-none z-0 transition-opacity duration-700 ease-in-out bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(239,68,68,0.18),rgba(153,27,27,0.08)_45%,transparent_75%)] ${
+          !isOnline ? "opacity-100" : "opacity-0"
+        }`}
+      />
+
       {/* Fixed Header Layer - Permanently fixed to top of viewport */}
       <header className="fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none">
         <div
@@ -253,10 +280,15 @@ export default function App() {
       {/* Underlying layout and page content */}
       <div
         key={session ? "auth-session" : "guest-session"}
-        className={`flex-1 flex flex-col page-blur-transition ${isModalOpen ? "page-blurred" : "page-unblurred"
-          }`}
+        className={`flex-1 flex flex-col page-blur-transition z-10 ${
+          isModalOpen ? "page-blurred" : "page-unblurred"
+        }`}
       >
-        <main className="flex-1 flex flex-col bg-black text-white pb-6 pt-[94px] sm:pt-[110px]">
+        <main
+          className={`flex-1 flex flex-col transition-[background-color] duration-700 ease-in-out pb-6 pt-[94px] sm:pt-[110px] ${
+            !isOnline ? "bg-red-950/20" : "bg-transparent"
+          }`}
+        >
           {/* Page Content Container */}
           <div
             className={`mx-auto w-full px-4 flex flex-col flex-1 gap-6 transition-all duration-300 ${currentPage === "dashboard"
