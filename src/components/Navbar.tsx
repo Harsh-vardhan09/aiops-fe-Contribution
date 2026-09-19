@@ -55,24 +55,24 @@ export default function Navbar({
     };
   }, []);
 
-  // When offline, cycle alert: show for 3 seconds every 15 seconds
+  // When offline, cycle alert: show for 5 seconds every 15 seconds
   useEffect(() => {
     if (isOnline) {
       setShowOfflineAlert(false);
       return;
     }
 
-    // Initial 3s display
+    // Initial 5s display
     setShowOfflineAlert(true);
     const initialHide = setTimeout(() => {
       setShowOfflineAlert(false);
-    }, 3000);
+    }, 5000);
 
     const interval = setInterval(() => {
       setShowOfflineAlert(true);
       setTimeout(() => {
         setShowOfflineAlert(false);
-      }, 3000);
+      }, 5000);
     }, 15000);
 
     return () => {
@@ -177,13 +177,13 @@ export default function Navbar({
 
           {/* Offline indicator: Displays for 3s every 15s with smooth fade */}
           <div
-            className={`inline-flex items-center gap-1.5 rounded-full border border-red-500/40 bg-red-500/15 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider text-red-300 transition-all duration-500 ease-in-out ${
+            className={`inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-wider text-white/80 shadow-sm transition-all duration-500 ease-in-out ${
               !isOnline && showOfflineAlert
                 ? "opacity-100 scale-100 max-w-[130px]"
                 : "opacity-0 scale-95 pointer-events-none max-w-0 px-0 border-transparent overflow-hidden"
             }`}
           >
-            <WifiOff className="h-2.5 w-2.5 text-red-400 shrink-0" />
+            <WifiOff className="h-2.5 w-2.5 text-white/70 shrink-0" />
             <span className="whitespace-nowrap">No Internet</span>
           </div>
         </div>

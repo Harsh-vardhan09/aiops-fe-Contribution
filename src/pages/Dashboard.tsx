@@ -24,6 +24,9 @@ export default function Dashboard({
   userEmail?: string;
 } = {}) {
   const [isMounted, setIsMounted] = useState(false);
+  const [isOnline, setIsOnline] = useState<boolean>(() => {
+    return typeof navigator !== "undefined" ? navigator.onLine : true;
+  });
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -38,6 +41,19 @@ export default function Dashboard({
   const [selectedProjectIdFilter, setSelectedProjectIdFilter] = useState<string | null>(null);
   const [showAllChip, setShowAllChip] = useState(true);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -267,21 +283,6 @@ export default function Dashboard({
     : "••••••••••••••••••••••••••••••••";
 
 
-  if (isSyncing) {
-    return (
-      <div
-        className={`w-full flex min-h-[450px] items-center justify-center transition-all duration-200 ease-out ${isSyncFading ? "opacity-0 scale-95 filter blur-xs" : "opacity-100 scale-100 filter blur-none"
-          }`}
-      >
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-7 w-7 animate-spin text-green-400" />
-          <p className="font-mono text-xs uppercase tracking-wider text-white/50">
-            Synchronizing Projects
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   const scrollToTargetSection = (target: "incidents" | "activity") => {
     const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
@@ -541,55 +542,72 @@ export default function Dashboard({
 
   return (
     <div className="w-full flex flex-col gap-6 animate-dashboard-fade">
-      {/* 1. Desktop 3-Column Layout (Hidden on Mobile) */}
-      <div className="hidden lg:flex desktop-layout-container w-full flex-row justify-center items-start gap-6 xl:gap-8 mx-auto">
-        {/* Left Rail: Navigation / Project Context */}
-        <aside className="w-[280px] xl:w-[310px] 2xl:w-[320px] shrink-0 sticky top-[106px] lg:top-[110px] space-y-4">
-          {renderLeftRail()}
-        </aside>
-
-        {/* Center: Main Visual Focus */}
-        {renderCenterStage()}
-
-        {/* Right Rail: System Context & Monitoring */}
-        <aside className="w-[280px] xl:w-[310px] 2xl:w-[320px] shrink-0 sticky top-[106px] lg:top-[110px] space-y-4">
-          {renderRightRail()}
-        </aside>
-      </div>
-
-      {/* 2. Mobile Full-Width Rail Carousel View (Hidden on Desktop) */}
-      <div className="block lg:hidden mobile-layout-container w-full pb-28">
-        {/* Carousel Track with Full-Width Translation Animation (Driven purely by buttons, swiping disabled) */}
-        <div className="w-full min-w-0 max-w-full overflow-hidden">
-          <div
-            className="flex items-start w-full"
-            style={{
-              transform: `translate3d(-${mobileSlide * 100}%, 0, 0)`,
-              transition: "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
-            }}
-          >
-            {/* Slide 0: Left Rail (Projects) */}
-            <div className="w-full min-w-full shrink-0">
-              {renderLeftRail()}
-            </div>
-
-            {/* Slide 1: Center Stage (Workspace - Default on Mobile) */}
-            <div className="w-full min-w-full shrink-0">
-              {renderCenterStage()}
-            </div>
-
-            {/* Slide 2: Right Rail (System) */}
-            <div className="w-full min-w-full shrink-0">
-              {renderRightRail()}
-            </div>
+      {isSyncing ? (
+        <div
+          className={`w-full flex min-h-[450px] items-center justify-center transition-all duration-200 ease-out ${
+            isSyncFading ? "opacity-0 scale-95 filter blur-xs" : "opacity-100 scale-100 filter blur-none"
+          }`}
+        >
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="h-7 w-7 animate-spin text-green-400" />
+            <p className="font-mono text-xs uppercase tracking-wider text-white/50">
+              Synchronizing Projects
+            </p>
           </div>
         </div>
-      </div>
+      ) : (
+        <>
+          {/* 1. Desktop 3-Column Layout (Hidden on Mobile) */}
+          <div className="hidden lg:flex desktop-layout-container w-full flex-row justify-center items-start gap-6 xl:gap-8 mx-auto">
+            {/* Left Rail: Navigation / Project Context */}
+            <aside className="w-[280px] xl:w-[310px] 2xl:w-[320px] shrink-0 sticky top-[106px] lg:top-[110px] space-y-4">
+              {renderLeftRail()}
+            </aside>
+
+            {/* Center: Main Visual Focus */}
+            {renderCenterStage()}
+
+            {/* Right Rail: System Context & Monitoring */}
+            <aside className="w-[280px] xl:w-[310px] 2xl:w-[320px] shrink-0 sticky top-[106px] lg:top-[110px] space-y-4">
+              {renderRightRail()}
+            </aside>
+          </div>
+
+          {/* 2. Mobile Full-Width Rail Carousel View (Hidden on Desktop) */}
+          <div className="block lg:hidden mobile-layout-container w-full pb-28">
+            {/* Carousel Track with Full-Width Translation Animation (Driven purely by buttons, swiping disabled) */}
+            <div className="w-full min-w-0 max-w-full overflow-hidden">
+              <div
+                className="flex items-start w-full"
+                style={{
+                  transform: `translate3d(-${mobileSlide * 100}%, 0, 0)`,
+                  transition: "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+                }}
+              >
+                {/* Slide 0: Left Rail (Projects) */}
+                <div className="w-full min-w-full shrink-0">
+                  {renderLeftRail()}
+                </div>
+
+                {/* Slide 1: Center Stage (Workspace - Default on Mobile) */}
+                <div className="w-full min-w-full shrink-0">
+                  {renderCenterStage()}
+                </div>
+
+                {/* Slide 2: Right Rail (System) */}
+                <div className="w-full min-w-full shrink-0">
+                  {renderRightRail()}
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* 3. Floating Bottom Nav Overlay (Portaled directly to document.body for true viewport anchoring) */}
       {typeof document !== "undefined" &&
         (() => {
-          const isBottomNavHidden = Boolean(!isMounted || isExiting || isSettingsOpen || isModalOpen || isSignOutMenuOpen);
+          const isBottomNavHidden = Boolean(!isMounted || isSyncing || isExiting || isSettingsOpen || isModalOpen || isSignOutMenuOpen);
           return createPortal(
             <nav
               id="bottom-nav"
@@ -601,61 +619,68 @@ export default function Dashboard({
               }`}
             >
               <div
-                className={`pointer-events-auto backdrop-blur-2xl bottom-nav-blur bg-black/60 border border-white/20 rounded-full p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.6)] flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider transition-all duration-300 ${
-                  isSignOutMenuOpen ? "page-blurred" : "page-unblurred"
-                }`}
+                className={`pointer-events-auto backdrop-blur-2xl bottom-nav-blur border rounded-full p-1.5 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider transition-all duration-700 ease-in-out ${
+                  !isOnline
+                    ? "bg-red-950/40 border-red-500/40 shadow-[0_4px_25px_rgba(239,68,68,0.2)]"
+                    : "bg-black/60 border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.6)]"
+                } ${isSignOutMenuOpen ? "page-blurred" : "page-unblurred"}`}
               >
-              <button
-                onClick={() => {
-                  setMobileSlide(0);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${mobileSlide === 0
-                  ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
-                  : "text-white/40 hover:text-white/70 border border-transparent"
+                <button
+                  onClick={() => {
+                    setMobileSlide(0);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${
+                    mobileSlide === 0
+                      ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
+                      : "text-white/40 hover:text-white/70 border border-transparent"
                   }`}
-              >
-                <Folder className="h-3.5 w-3.5" />
-                <span className="compact-hide">Projects</span>
-              </button>
+                >
+                  <Folder className="h-3.5 w-3.5" />
+                  <span className="compact-hide">Projects</span>
+                </button>
 
-              <button
-                onClick={() => {
-                  setMobileSlide(1);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${mobileSlide === 1
-                  ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
-                  : "text-white/40 hover:text-white/70 border border-transparent"
+                <button
+                  onClick={() => {
+                    setMobileSlide(1);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${
+                    mobileSlide === 1
+                      ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
+                      : "text-white/40 hover:text-white/70 border border-transparent"
                   }`}
-              >
-                <PanelsTopLeft className="h-3.5 w-3.5" />
-                <span className="compact-hide">Workspace</span>
-              </button>
+                >
+                  <PanelsTopLeft className="h-3.5 w-3.5" />
+                  <span className="compact-hide">Workspace</span>
+                </button>
 
-              <button
-                onClick={() => {
-                  setMobileSlide(2);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${mobileSlide === 2
-                  ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
-                  : "text-white/40 hover:text-white/70 border border-transparent"
+                <button
+                  onClick={() => {
+                    setMobileSlide(2);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${
+                    mobileSlide === 2
+                      ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
+                      : "text-white/40 hover:text-white/70 border border-transparent"
                   }`}
-              >
-                <Info className="h-3.5 w-3.5" />
-                <span className="compact-hide">System</span>
-              </button>
-            </div>
+                >
+                  <Info className="h-3.5 w-3.5" />
+                  <span className="compact-hide">System</span>
+                </button>
+              </div>
             </nav>,
             document.body
           );
         })()}
 
       {/* Footer */}
-      <footer className="mt-auto w-full py-6 text-center text-xs sm:text-sm text-white/40">
-        <p>&copy; 2026 AI Ops Copilot. End-to-end user isolation & bank-grade token encryption.</p>
-      </footer>
+      {!isSyncing && (
+        <footer className="mt-auto w-full py-6 text-center text-xs sm:text-sm text-white/40">
+          <p>&copy; 2026 AI Ops Copilot. End-to-end user isolation & bank-grade token encryption.</p>
+        </footer>
+      )}
     </div>
   );
 }
