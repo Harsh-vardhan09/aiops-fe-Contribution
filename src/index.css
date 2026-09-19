@@ -192,7 +192,7 @@ input:disabled {
 }
 
 .page-unblurred {
-  filter: blur(0px) brightness(1);
+  filter: none;
 }
 
 .navbar-blur-60 {
