@@ -1,5 +1,66 @@
+export type ThemePaletteId = "emerald" | "cyan_blue" | "violet" | "amber" | "blue";
+
+export interface ThemePalette {
+  id: ThemePaletteId;
+  name: string;
+  description: string;
+  accent: string;
+  accentHover: string;
+  accentSoft: string;
+  accentText: string;
+}
+
+export const THEME_PALETTES: ThemePalette[] = [
+  {
+    id: "emerald",
+    name: "Emerald",
+    description: "Current emerald green",
+    accent: "#00E676",
+    accentHover: "#00C853",
+    accentSoft: "#06351F",
+    accentText: "#70F0B0",
+  },
+  {
+    id: "cyan_blue",
+    name: "Cyan",
+    description: "Cool technical cyan/blue",
+    accent: "#00D9FF",
+    accentHover: "#00B8D9",
+    accentSoft: "#05333B",
+    accentText: "#6DEBFF",
+  },
+  {
+    id: "violet",
+    name: "Violet",
+    description: "Futuristic violet/purple",
+    accent: "#B76CFF",
+    accentHover: "#9C4DFF",
+    accentSoft: "#28123D",
+    accentText: "#D09AFF",
+  },
+  {
+    id: "amber",
+    name: "Amber",
+    description: "Warm amber/gold",
+    accent: "#FFC247",
+    accentHover: "#E6A82F",
+    accentSoft: "#382A08",
+    accentText: "#FFD978",
+  },
+  {
+    id: "blue",
+    name: "Blue",
+    description: "Clean electric blue",
+    accent: "#3B9CFF",
+    accentHover: "#1976D2",
+    accentSoft: "#092746",
+    accentText: "#7DBDFF",
+  },
+];
+
 export interface AppSettings {
   compactButtons: boolean;
+  theme: ThemePaletteId;
   offlineMode: boolean;
   cacheSizeBytes: number; // in bytes (e.g. 512KB, 1MB, 2MB, 5MB)
   cacheDurationMinutes: number; // in minutes
@@ -17,6 +78,7 @@ const SETTINGS_KEY = "aiops_app_settings";
 
 export const DEFAULT_SETTINGS: AppSettings = {
   compactButtons: false,
+  theme: "emerald",
   offlineMode: false,
   cacheSizeBytes: 512 * 1024, // 512 KB default
   cacheDurationMinutes: 60, // 60 minutes default
@@ -81,6 +143,7 @@ export function saveSettings(settings: AppSettings): void {
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     applyCompactMode(settings.compactButtons);
+    applyTheme(settings.theme);
     // Dispatch custom event for reactive listeners
     window.dispatchEvent(new CustomEvent("aiops-settings-changed", { detail: settings }));
   } catch (err) {
@@ -95,4 +158,9 @@ export function applyCompactMode(compact: boolean): void {
   } else {
     document.documentElement.classList.remove("compact-mode");
   }
+}
+
+export function applyTheme(theme: ThemePaletteId): void {
+  if (typeof document === "undefined") return;
+  document.documentElement.setAttribute("data-theme", theme || "emerald");
 }

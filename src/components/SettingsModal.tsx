@@ -6,7 +6,9 @@ import {
   saveSettings,
   CACHE_SIZE_STOPS,
   parseDurationToMinutes,
+  THEME_PALETTES,
   type AppSettings,
+  type ThemePaletteId,
 } from "../lib/settings";
 
 interface SettingsModalProps {
@@ -55,6 +57,13 @@ export default function SettingsModal({
 
   const handleToggleCompact = () => {
     const next = { ...settings, compactButtons: !settings.compactButtons };
+    setSettings(next);
+    saveSettings(next);
+    showFeedback();
+  };
+
+  const handleThemeChange = (themeId: ThemePaletteId) => {
+    const next = { ...settings, theme: themeId };
     setSettings(next);
     saveSettings(next);
     showFeedback();
@@ -149,7 +158,7 @@ export default function SettingsModal({
               </span>
             )}
           </div>
-          <p className="mt-1 text-xs sm:text-sm leading-relaxed text-white/50">
+          <p className="compact-hide mt-1 text-xs sm:text-sm leading-relaxed text-white/50">
             Workspace configuration & offline telemetry storage
           </p>
 
@@ -163,13 +172,13 @@ export default function SettingsModal({
                 </h3>
               </div>
 
-              {/* Compact Buttons with Toggle */}
+              {/* Less Verbose with Toggle */}
               <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3.5 backdrop-blur-sm">
                 <div className="min-w-0 flex-1">
                   <div className="font-mono text-xs font-semibold text-white">
-                    Compact Buttons
+                    Less Verbose
                   </div>
-                  <div className="text-[11px] text-white/40 mt-0.5">
+                  <div className="compact-hide text-[11px] text-white/40 mt-0.5">
                     Hides text labels on action buttons & chips
                   </div>
                 </div>
@@ -190,6 +199,44 @@ export default function SettingsModal({
                   />
                 </button>
               </div>
+
+              {/* Accent Theme Selector: Accent O O O O O with selected name beneath Accent */}
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3.5 backdrop-blur-sm">
+                <div className="min-w-0 flex-1">
+                  <div className="font-mono text-xs font-semibold text-white">
+                    Accent
+                  </div>
+                  <div className="compact-hide text-[11px] text-green-400 mt-0.5 font-mono capitalize">
+                    {THEME_PALETTES.find((p) => p.id === (settings.theme || "emerald"))?.name || "Emerald"}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  {THEME_PALETTES.map((palette) => {
+                    const isSelected = (settings.theme || "emerald") === palette.id;
+                    return (
+                      <button
+                        key={palette.id}
+                        type="button"
+                        onClick={() => handleThemeChange(palette.id)}
+                        className={`group relative h-6 w-6 rounded-full border transition-all flex items-center justify-center ${
+                          isSelected
+                            ? "border-white scale-110 shadow-[0_0_10px_rgba(255,255,255,0.3)] ring-2 ring-white/40"
+                            : "border-black/50 hover:scale-110 hover:border-white/50 opacity-80 hover:opacity-100"
+                        }`}
+                        style={{
+                          backgroundColor: palette.accent,
+                        }}
+                        title={`${palette.name} — ${palette.description}`}
+                      >
+                        {isSelected && (
+                          <Check className="h-3 w-3 text-black stroke-[3]" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             {/* Header 2: Offline */}
@@ -207,7 +254,7 @@ export default function SettingsModal({
                   <div className="font-mono text-xs font-semibold text-white">
                     Offline Mode
                   </div>
-                  <div className="text-[11px] text-white/40 mt-0.5">
+                  <div className="compact-hide text-[11px] text-white/40 mt-0.5">
                     Cache workspace & telemetry locally
                   </div>
                 </div>
@@ -263,8 +310,8 @@ export default function SettingsModal({
                         />
                       </div>
 
-                      {/* Stepped stops o----o----o----o indicator labels */}
-                      <div className="mt-2.5 flex justify-between text-[10px] font-mono text-white/40 select-none">
+                      {/* Stepped stops o----o----o----o indicator labels exactly aligned under thumb stops */}
+                      <div className="relative h-8 cache-slider-stops mt-2 select-none w-full transition-[height] duration-200">
                         {CACHE_SIZE_STOPS.map((stop, idx) => (
                           <button
                             key={stop.label}
@@ -275,14 +322,17 @@ export default function SettingsModal({
                               saveSettings(next);
                               showFeedback();
                             }}
-                            className={`transition-colors flex flex-col items-center gap-0.5 ${
+                            style={{
+                              left: `calc(8px + (100% - 16px) * ${idx / (CACHE_SIZE_STOPS.length - 1)})`,
+                            }}
+                            className={`absolute top-0 -translate-x-1/2 transition-colors flex flex-col items-center gap-0.5 text-[10px] font-mono ${
                               idx === activeIndex
                                 ? "text-green-300 font-bold"
                                 : "text-white/40 hover:text-white/70"
                             }`}
                           >
-                            <span className="text-[9px]">•</span>
-                            <span>{stop.label}</span>
+                            <span className="text-[9px] leading-none">•</span>
+                            <span className="whitespace-nowrap compact-hide">{stop.label}</span>
                           </button>
                         ))}
                       </div>
@@ -310,7 +360,7 @@ export default function SettingsModal({
                       placeholder="e.g. 30m, 1h, 24h"
                       className={`${field} font-mono text-xs`}
                     />
-                    <p className="text-[10px] text-white/40">
+                    <p className="compact-hide text-[10px] text-white/40">
                       Data expires automatically after this duration.
                     </p>
                   </div>

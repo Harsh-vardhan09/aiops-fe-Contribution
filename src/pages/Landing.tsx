@@ -14,6 +14,7 @@ import {
   Lightbulb,
   User,
 } from "lucide-react";
+import { loadSettings, THEME_PALETTES, type AppSettings } from "@/lib/settings";
 
 const HEADLINE_TEXT = "Comprehensive AI Ops solutions designed for every digital business";
 
@@ -125,6 +126,24 @@ export default function Landing({
     return () => clearTimeout(timer);
   }, []);
 
+  const [themePalette, setThemePalette] = useState(() => {
+    const currentTheme = loadSettings().theme || "emerald";
+    return THEME_PALETTES.find((p) => p.id === currentTheme) || THEME_PALETTES[0];
+  });
+
+  useEffect(() => {
+    const handleSettingsChange = (e: Event) => {
+      const customEvent = e as CustomEvent<AppSettings>;
+      if (customEvent.detail?.theme) {
+        const palette = THEME_PALETTES.find((p) => p.id === customEvent.detail.theme);
+        if (palette) setThemePalette(palette);
+      }
+    };
+
+    window.addEventListener("aiops-settings-changed", handleSettingsChange);
+    return () => window.removeEventListener("aiops-settings-changed", handleSettingsChange);
+  }, []);
+
   const handlePrimaryCta = () => {
     onDashboardClick?.();
   };
@@ -182,7 +201,7 @@ export default function Landing({
           {isDesktop && (
             <Suspense fallback={null}>
               <LightPillar
-                topColor="#27d036"
+                topColor={themePalette.accent}
                 bottomColor="#d5bdd4"
                 intensity={0.9}
                 rotationSpeed={0.3}
@@ -384,7 +403,7 @@ export default function Landing({
       </section>
 
       {/* Footer */}
-      <footer className="mt-8 sm:mt-12 w-full py-6 text-center text-xs sm:text-sm text-white/40">
+      <footer className="mt-32 sm:mt-48 w-full py-8 text-center text-xs sm:text-sm text-white/40 border-t border-white/5">
         <p>&copy; 2026 AI Ops. All rights reserved.</p>
       </footer>
     </>

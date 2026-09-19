@@ -215,9 +215,153 @@ input:disabled {
   transform: translateZ(0);
 }
 
+/* Create Project Form - Standard vs Compact Mode */
+.create-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .create-input-container {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.create-project-input {
+  flex: 1 1 0%;
+  width: 100%;
+}
+
+.create-project-btn {
+  flex-shrink: 0;
+}
+
 /* Compact Buttons Mode - Hides text labels on specific buttons and chips */
 .compact-mode .compact-hide {
   display: none !important;
+}
+
+.compact-mode .cache-slider-stops {
+  height: 0.65rem !important;
+}
+
+/* When Compact Mode is enabled: Place green create button inside the project name textbox */
+.compact-mode .create-input-container {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+}
+
+.compact-mode .create-project-input {
+  width: 100% !important;
+  padding-right: 2.85rem !important;
+}
+
+.compact-mode .create-project-btn {
+  position: absolute;
+  right: 0.375rem;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 2.25rem;
+  width: 2.25rem;
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  z-index: 10;
+}
+
+/* Theme Palette Custom Properties */
+:root,
+[data-theme="emerald"] {
+  --color-green-300: #70F0B0;
+  --color-green-400: #00E676;
+  --color-green-500: #00C853;
+  --color-green-600: #00a844;
+  --color-green-950: #06351F;
+  --theme-accent: #00E676;
+  --theme-accent-hover: #00C853;
+  --theme-accent-soft: #06351F;
+  --theme-accent-text: #70F0B0;
+  --theme-surface: #0B0B0B;
+  --theme-surface-elevated: #111111;
+  --theme-border: #2A2A2A;
+  --theme-text-primary: #F5F5F5;
+  --theme-text-secondary: #8A8A8A;
+}
+
+[data-theme="cyan_blue"] {
+  --color-green-300: #6DEBFF;
+  --color-green-400: #00D9FF;
+  --color-green-500: #00B8D9;
+  --color-green-600: #009cb8;
+  --color-green-950: #05333B;
+  --theme-accent: #00D9FF;
+  --theme-accent-hover: #00B8D9;
+  --theme-accent-soft: #05333B;
+  --theme-accent-text: #6DEBFF;
+  --theme-surface: #0A0C0D;
+  --theme-surface-elevated: #101416;
+  --theme-border: #293338;
+  --theme-text-primary: #F2F7F8;
+  --theme-text-secondary: #87969B;
+}
+
+[data-theme="violet"] {
+  --color-green-300: #D09AFF;
+  --color-green-400: #B76CFF;
+  --color-green-500: #9C4DFF;
+  --color-green-600: #8432ea;
+  --color-green-950: #28123D;
+  --theme-accent: #B76CFF;
+  --theme-accent-hover: #9C4DFF;
+  --theme-accent-soft: #28123D;
+  --theme-accent-text: #D09AFF;
+  --theme-surface: #0C0A0F;
+  --theme-surface-elevated: #131017;
+  --theme-border: #302A38;
+  --theme-text-primary: #F6F2FA;
+  --theme-text-secondary: #91889A;
+}
+
+[data-theme="amber"] {
+  --color-green-300: #FFD978;
+  --color-green-400: #FFC247;
+  --color-green-500: #E6A82F;
+  --color-green-600: #c98e20;
+  --color-green-950: #382A08;
+  --theme-accent: #FFC247;
+  --theme-accent-hover: #E6A82F;
+  --theme-accent-soft: #382A08;
+  --theme-accent-text: #FFD978;
+  --theme-surface: #0D0B07;
+  --theme-surface-elevated: #15120C;
+  --theme-border: #332D20;
+  --theme-text-primary: #FAF7EF;
+  --theme-text-secondary: #968F80;
+}
+
+[data-theme="blue"] {
+  --color-green-300: #7DBDFF;
+  --color-green-400: #3B9CFF;
+  --color-green-500: #1976D2;
+  --color-green-600: #145ca4;
+  --color-green-950: #092746;
+  --theme-accent: #3B9CFF;
+  --theme-accent-hover: #1976D2;
+  --theme-accent-soft: #092746;
+  --theme-accent-text: #7DBDFF;
+  --theme-surface: #090B0E;
+  --theme-surface-elevated: #101318;
+  --theme-border: #29313B;
+  --theme-text-primary: #F3F7FB;
+  --theme-text-secondary: #8995A3;
 }
 
 /* Custom Stepped Range Slider */
@@ -227,6 +371,10 @@ input[type="range"] {
   background: rgba(255, 255, 255, 0.15);
   border-radius: 9999px;
   outline: none;
+  margin: 0;
+  padding: 0;
+  display: block;
+  width: 100%;
 }
 
 input[type="range"]::-webkit-slider-thumb {
@@ -235,8 +383,8 @@ input[type="range"]::-webkit-slider-thumb {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #4ade80;
-  box-shadow: 0 0 10px rgba(74, 222, 128, 0.6);
+  background: var(--theme-accent, #00E676);
+  box-shadow: 0 0 10px var(--theme-accent, rgba(0, 230, 118, 0.6));
   cursor: pointer;
   border: 2px solid #000;
   transition: transform 0.15s ease, background-color 0.15s ease;
@@ -250,8 +398,8 @@ input[type="range"]::-moz-range-thumb {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #4ade80;
-  box-shadow: 0 0 10px rgba(74, 222, 128, 0.6);
+  background: var(--theme-accent, #00E676);
+  box-shadow: 0 0 10px var(--theme-accent, rgba(0, 230, 118, 0.6));
   cursor: pointer;
   border: 2px solid #000;
   transition: transform 0.15s ease, background-color 0.15s ease;

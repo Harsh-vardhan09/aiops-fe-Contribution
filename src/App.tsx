@@ -5,7 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import Landing from "./pages/Landing";
 import Navbar from "./components/Navbar";
 import SettingsModal from "./components/SettingsModal";
-import { applyCompactMode, loadSettings } from "./lib/settings";
+import { applyCompactMode, applyTheme, loadSettings } from "./lib/settings";
 import { clearUserCache, clearAllCache, resetSessionRefetchState } from "./lib/cache";
 
 type PageState = "landing" | "auth" | "dashboard";
@@ -42,8 +42,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    // Initialize compact buttons state on mount
-    applyCompactMode(loadSettings().compactButtons);
+    // Initialize compact buttons & theme state on mount
+    const settings = loadSettings();
+    applyCompactMode(settings.compactButtons);
+    applyTheme(settings.theme);
   }, []);
 
   useEffect(() => {
