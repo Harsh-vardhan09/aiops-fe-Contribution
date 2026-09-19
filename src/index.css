@@ -208,6 +208,12 @@ input:disabled {
   }
 }
 
+.bottom-nav-blur {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  transform: translateZ(0);
+}
+
 /* Compact Buttons Mode - Hides text labels on specific buttons and chips */
 .compact-mode .compact-hide {
   display: none !important;

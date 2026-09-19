@@ -21,7 +21,6 @@ export default function App() {
   const [isAuthClosing, setIsAuthClosing] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSettingsClosing, setIsSettingsClosing] = useState(false);
-  const [navbarGuideText, setNavbarGuideText] = useState<string | null>(null);
   const navTimeoutRef = useRef<number | null>(null);
   const currentPageRef = useRef<PageState>("landing");
 
@@ -204,7 +203,6 @@ export default function App() {
             onLogout={handleLogout}
             onMenuOpenChange={setIsSignOutMenuOpen}
             currentPage={currentPage === "dashboard" ? "dashboard" : "landing"}
-            guideOverlayText={navbarGuideText}
           />
         </div>
       </header>
@@ -215,7 +213,7 @@ export default function App() {
         className={`flex-1 flex flex-col page-blur-transition ${isModalOpen ? "page-blurred" : "page-unblurred"
           }`}
       >
-        <main className="flex-1 flex flex-col bg-black text-white pb-6 pt-20 sm:pt-24">
+        <main className="flex-1 flex flex-col bg-black text-white pb-6 pt-[94px] sm:pt-[110px]">
           {/* Page Content Container */}
           <div
             className={`mx-auto w-full px-4 flex flex-col flex-1 gap-6 transition-all duration-300 ${currentPage === "dashboard"
@@ -230,12 +228,13 @@ export default function App() {
                   }`}
               >
                 <Dashboard
-                  onGuideTextChange={setNavbarGuideText}
                   onOpenSettings={() => {
                     setIsSettingsClosing(false);
                     setIsSettingsOpen(true);
                   }}
                   isSettingsOpen={isSettingsOpen}
+                  isSignOutMenuOpen={isSignOutMenuOpen}
+                  isModalOpen={isModalOpen}
                   userEmail={session?.user?.email}
                 />
               </div>

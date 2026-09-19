@@ -1,21 +1,24 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { fetchProjects, createProject, fetchIncidents, type Project, type Incident } from "../api/backend";
 import { supabase } from "../lib/supabase";
 import IncidentsList from "../components/IncidentsList";
 import LeftRail, { type DashboardProject } from "../components/dashboard/LeftRail";
 import RightRail, { type ActivityItem } from "../components/dashboard/RightRail";
 import { getCachedData, setCachedData, isSessionRefreshed, markSessionRefetched } from "../lib/cache";
-import { Check, Bolt, Sparkles, Eye, EyeOff, Copy, ShieldCheck, KeyRound, Loader2, Folder, PanelsTopLeft, Settings2 } from "lucide-react";
+import { Check, Bolt, Sparkles, Eye, EyeOff, Copy, ShieldCheck, KeyRound, Loader2, Folder, PanelsTopLeft, Info } from "lucide-react";
 
 export default function Dashboard({
-  onGuideTextChange,
   onOpenSettings,
   isSettingsOpen = false,
+  isSignOutMenuOpen = false,
+  isModalOpen = false,
   userEmail: initialUserEmail,
 }: {
-  onGuideTextChange?: (text: string | null) => void;
   onOpenSettings?: () => void;
   isSettingsOpen?: boolean;
+  isSignOutMenuOpen?: boolean;
+  isModalOpen?: boolean;
   userEmail?: string;
 } = {}) {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -42,32 +45,9 @@ export default function Dashboard({
     });
   };
 
-  // Mobile carousel slide state: 0 = Left Rail, 1 = Center Stage (default), 2 = Right Rail
+  // Mobile carousel slide state: 0 = Left Rail (Projects), 1 = Center Stage (Workspace - default), 2 = Right Rail (System)
   const [mobileSlide, setMobileSlide] = useState<number>(1);
-  const [touchDeltaX, setTouchDeltaX] = useState<number>(0);
-  const [isSwiping, setIsSwiping] = useState<boolean>(false);
-
-  const touchStartX = useRef<number | null>(null);
-  const touchStartY = useRef<number | null>(null);
   const createInputRef = useRef<HTMLInputElement>(null);
-  const [dashboardFadeKey, setDashboardFadeKey] = useState<number>(0);
-  const guideTimers = useRef<number[]>([]);
-
-  const cancelGuide = useCallback(() => {
-    if (guideTimers.current.length > 0) {
-      guideTimers.current.forEach(clearTimeout);
-      guideTimers.current = [];
-      onGuideTextChange?.(null);
-    }
-  }, [onGuideTextChange]);
-
-  useEffect(() => {
-    return () => {
-      guideTimers.current.forEach(clearTimeout);
-      guideTimers.current = [];
-      onGuideTextChange?.(null);
-    };
-  }, [onGuideTextChange]);
 
   const addActivity = useCallback((act: ActivityItem) => {
     setActivities((prev) => [act, ...prev.slice(0, 8)]);
@@ -165,53 +145,9 @@ export default function Dashboard({
       setTimeout(() => {
         setIsSyncing(false);
         setIsSyncFading(false);
-
-        // Guide animation for first-time login on mobile
-        const isMobile =
-          typeof window !== "undefined" &&
-          (window.innerWidth < 1024 ||
-            /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
-        const hasSeenGuide = sessionStorage.getItem("hasSeenMobileSwipeGuide");
-
-        if (isMobile && !hasSeenGuide) {
-          sessionStorage.setItem("hasSeenMobileSwipeGuide", "true");
-          onGuideTextChange?.("Swipe to change views");
-
-          // Start at Workspace (1)
-          setMobileSlide(1);
-
-          // 5 seconds total divided equally across 4 animations (1.25s per step):
-          // Step 1: Workspace -> Projects
-          const t1 = window.setTimeout(() => {
-            setMobileSlide(0);
-          }, 100);
-
-          // Step 2: Projects -> Workspace
-          const t2 = window.setTimeout(() => {
-            setMobileSlide(1);
-          }, 1350);
-
-          // Step 3: Workspace -> System
-          const t3 = window.setTimeout(() => {
-            setMobileSlide(2);
-          }, 2600);
-
-          // Step 4: System -> Workspace
-          const t4 = window.setTimeout(() => {
-            setMobileSlide(1);
-          }, 3850);
-
-          // Return all to normal after 5.1s and re-trigger dashboard fade in animation
-          const t5 = window.setTimeout(() => {
-            onGuideTextChange?.(null);
-            setDashboardFadeKey((prev) => prev + 1);
-          }, 5100);
-
-          guideTimers.current = [t1, t2, t3, t4, t5];
-        }
       }, 160);
     }
-  }, [addActivity, onGuideTextChange]);
+  }, [addActivity]);
 
   useEffect(() => {
     loadData();
@@ -294,44 +230,6 @@ export default function Dashboard({
     ? activeProject.api_key.slice(0, 4) + "•".repeat(Math.max(16, activeProject.api_key.length - 8)) + activeProject.api_key.slice(-4)
     : "••••••••••••••••••••••••••••••••";
 
-  // Touch handlers for mobile horizontal swipe
-  const handleTouchStart = (e: React.TouchEvent) => {
-    cancelGuide();
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-    setIsSwiping(false);
-    setTouchDeltaX(0);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStartX.current === null || touchStartY.current === null) return;
-    const currentX = e.touches[0].clientX;
-    const currentY = e.touches[0].clientY;
-    const diffX = currentX - touchStartX.current;
-    const diffY = currentY - touchStartY.current;
-
-    // Trigger horizontal swipe if horizontal movement is greater than vertical movement
-    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 8) {
-      setIsSwiping(true);
-      setTouchDeltaX(diffX);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (touchStartX.current !== null && isSwiping) {
-      if (touchDeltaX < -45 && mobileSlide < 2) {
-        setMobileSlide((prev) => prev + 1);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      } else if (touchDeltaX > 45 && mobileSlide > 0) {
-        setMobileSlide((prev) => prev - 1);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-    }
-    touchStartX.current = null;
-    touchStartY.current = null;
-    setIsSwiping(false);
-    setTouchDeltaX(0);
-  };
 
   if (isSyncing) {
     return (
@@ -409,7 +307,6 @@ export default function Dashboard({
       projects={dashboardProjects}
       activeProjectId={selectedProjectIdFilter}
       onSelectProject={(proj) => {
-        cancelGuide();
         const matched = projects.find((p) => p.id === proj.id) || null;
         setActiveProject(matched);
         setSelectedProjectIdFilter(proj.id);
@@ -427,7 +324,6 @@ export default function Dashboard({
       }}
       onNewProjectClick={handleNewProjectClick}
       onSelectQuickAccess={(key) => {
-        cancelGuide();
         if (key === "projects") {
           handleNewProjectClick();
         } else if (key === "incidents") {
@@ -604,11 +500,11 @@ export default function Dashboard({
   );
 
   return (
-    <div key={`dashboard-view-${dashboardFadeKey}`} className="w-full flex flex-col gap-6 animate-dashboard-fade">
+    <div className="w-full flex flex-col gap-6 animate-dashboard-fade">
       {/* 1. Desktop 3-Column Layout (Hidden on Mobile) */}
-      <div className="hidden lg:flex desktop-layout-container w-full flex-row justify-center items-start gap-6 xl:gap-8 mx-auto pt-3 lg:pt-5">
+      <div className="hidden lg:flex desktop-layout-container w-full flex-row justify-center items-start gap-6 xl:gap-8 mx-auto">
         {/* Left Rail: Navigation / Project Context */}
-        <aside className="w-[280px] xl:w-[310px] 2xl:w-[320px] shrink-0 sticky top-28 lg:top-[116px] space-y-4 pt-1">
+        <aside className="w-[280px] xl:w-[310px] 2xl:w-[320px] shrink-0 sticky top-[106px] lg:top-[110px] space-y-4">
           {renderLeftRail()}
         </aside>
 
@@ -616,74 +512,20 @@ export default function Dashboard({
         {renderCenterStage()}
 
         {/* Right Rail: System Context & Monitoring */}
-        <aside className="w-[280px] xl:w-[310px] 2xl:w-[320px] shrink-0 sticky top-28 lg:top-[116px] space-y-4 pt-1">
+        <aside className="w-[280px] xl:w-[310px] 2xl:w-[320px] shrink-0 sticky top-[106px] lg:top-[110px] space-y-4">
           {renderRightRail()}
         </aside>
       </div>
 
       {/* 2. Mobile Full-Width Rail Carousel View (Hidden on Desktop) */}
-      <div className="block lg:hidden mobile-layout-container w-full overflow-hidden">
-        {/* Mobile Stage Selector Indicator */}
-        <div className="flex items-center justify-center gap-2 pt-2.5 pb-4.5 font-mono text-[11px] uppercase tracking-wider">
-          <button
-            onClick={() => {
-              cancelGuide();
-              setMobileSlide(0);
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-            className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${mobileSlide === 0
-              ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
-              : "text-white/40 hover:text-white/70 border border-transparent"
-              }`}
-          >
-            <Folder className="h-3 w-3" />
-            <span className="compact-hide">Projects</span>
-          </button>
-
-          <button
-            onClick={() => {
-              cancelGuide();
-              setMobileSlide(1);
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-            className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${mobileSlide === 1
-              ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
-              : "text-white/40 hover:text-white/70 border border-transparent"
-              }`}
-          >
-            <PanelsTopLeft className="h-3 w-3" />
-            <span className="compact-hide">Workspace</span>
-          </button>
-
-          <button
-            onClick={() => {
-              cancelGuide();
-              setMobileSlide(2);
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-            className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${mobileSlide === 2
-              ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
-              : "text-white/40 hover:text-white/70 border border-transparent"
-              }`}
-          >
-            <Settings2 className="h-3 w-3" />
-            <span className="compact-hide">System</span>
-          </button>
-        </div>
-
-        {/* Swipeable Carousel Track with Full-Width Translation Animation */}
-        <div
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          className="w-full min-w-0 max-w-full overflow-hidden touch-pan-y"
-        >
+      <div className="block lg:hidden mobile-layout-container w-full pb-28">
+        {/* Carousel Track with Full-Width Translation Animation (Driven purely by buttons, swiping disabled) */}
+        <div className="w-full min-w-0 max-w-full overflow-hidden">
           <div
             className="flex items-start w-full"
             style={{
-              transform: `translate3d(calc(-${mobileSlide * 100}% + ${touchDeltaX}px), 0, 0)`,
-              transition: isSwiping ? "none" : "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
-              willChange: isSwiping ? "transform" : "auto",
+              transform: `translate3d(-${mobileSlide * 100}%, 0, 0)`,
+              transition: "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
             }}
           >
             {/* Slide 0: Left Rail (Projects) */}
@@ -703,6 +545,72 @@ export default function Dashboard({
           </div>
         </div>
       </div>
+
+      {/* 3. Floating Bottom Nav Overlay (Portaled directly to document.body for true viewport anchoring) */}
+      {typeof document !== "undefined" &&
+        (() => {
+          const isBottomNavHidden = Boolean(isSettingsOpen || isModalOpen || isSignOutMenuOpen);
+          return createPortal(
+            <nav
+              id="bottom-nav"
+              aria-label="Mobile stage navigation"
+              className={`fixed bottom-5 sm:bottom-6 left-0 right-0 z-40 flex justify-center pointer-events-none px-4 lg:hidden transition-all duration-300 ease-out ${
+                isBottomNavHidden
+                  ? "opacity-0 translate-y-12 scale-95 pointer-events-none"
+                  : "opacity-100 translate-y-0 scale-100"
+              }`}
+            >
+              <div
+                className={`pointer-events-auto bottom-nav-blur bg-black/70 border border-white/15 rounded-full p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.7)] flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider transition-all duration-300 ${
+                  isSignOutMenuOpen ? "page-blurred" : "page-unblurred"
+                }`}
+              >
+              <button
+                onClick={() => {
+                  setMobileSlide(0);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${mobileSlide === 0
+                  ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
+                  : "text-white/40 hover:text-white/70 border border-transparent"
+                  }`}
+              >
+                <Folder className="h-3.5 w-3.5" />
+                <span className="compact-hide">Projects</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setMobileSlide(1);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${mobileSlide === 1
+                  ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
+                  : "text-white/40 hover:text-white/70 border border-transparent"
+                  }`}
+              >
+                <PanelsTopLeft className="h-3.5 w-3.5" />
+                <span className="compact-hide">Workspace</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setMobileSlide(2);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${mobileSlide === 2
+                  ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
+                  : "text-white/40 hover:text-white/70 border border-transparent"
+                  }`}
+              >
+                <Info className="h-3.5 w-3.5" />
+                <span className="compact-hide">System</span>
+              </button>
+            </div>
+            </nav>,
+            document.body
+          );
+        })()}
 
       {/* Footer */}
       <footer className="mt-auto w-full py-6 text-center text-xs sm:text-sm text-white/40">
