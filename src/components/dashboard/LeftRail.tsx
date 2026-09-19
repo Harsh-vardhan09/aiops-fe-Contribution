@@ -75,7 +75,7 @@ export default function LeftRail({
   const [isSettingsSpinning, setIsSettingsSpinning] = useState(false);
   const [isActivitySpinning, setIsActivitySpinning] = useState(false);
 
-  const isSettingsActive = isSettingsOpen || isSettingsSpinning;
+  const isSettingsRotated = isSettingsOpen || isSettingsSpinning;
 
   const handleSettingsClick = () => {
     setIsSettingsSpinning(true);
@@ -110,7 +110,7 @@ export default function LeftRail({
             title="Create new project"
           >
             <Plus className="h-3 w-3" />
-            <span>New</span>
+            <span className="compact-hide">New</span>
           </button>
         </div>
 
@@ -170,7 +170,7 @@ export default function LeftRail({
                         : "border border-green-400/20 bg-green-400/10 text-green-300"
                     }`}
                   >
-                    {proj.incidentCount} {proj.incidentCount === 1 ? "inc" : "incs"}
+                    {proj.incidentCount} <span className="compact-hide">{proj.incidentCount === 1 ? "inc" : "incs"}</span>
                   </span>
                 </button>
               );
@@ -188,26 +188,23 @@ export default function LeftRail({
           </h3>
         </div>
 
-        {/* Mobile View: 3-Tile Grid with Big Icon Blocks & Text Below */}
-        <nav className="mt-3.5 grid grid-cols-3 gap-2.5 lg:hidden">
+        {/* Mobile View: 3-Column Grid with Direct Icons & Text Below */}
+        <nav className="mt-3.5 grid grid-cols-3 gap-2 lg:hidden">
           {/* Tile 1: All Incidents */}
           <button
             onClick={() => onSelectQuickAccess("incidents")}
-            className="group flex flex-col items-center text-center transition-transform active:scale-95"
+            className="group flex flex-col items-center justify-center text-center transition-transform active:scale-95 py-2 rounded-xl hover:bg-white/[0.02]"
           >
-            <div className="relative w-[75%] aspect-square rounded-xl sm:rounded-2xl border border-white/10 bg-white/[0.03] group-hover:border-red-400/30 group-hover:bg-red-400/[0.04] flex items-center justify-center transition-all p-1.5">
-              <Radio className="w-[62%] h-[62%] text-red-400 animate-pulse" strokeWidth={1.5} />
-              <span
-                className={`absolute top-1.5 right-1.5 flex items-center justify-center rounded-md px-2 py-0.5 font-mono text-[11.5px] sm:text-xs font-bold leading-none border tracking-tight shadow-sm ${
-                  incidentCount > 0
-                    ? "bg-red-500/20 text-red-300 border-red-500/40 shadow-[0_0_8px_rgba(239,68,68,0.25)]"
-                    : "bg-white/10 text-white/70 border-white/15"
-                }`}
-              >
+            <div className="relative flex items-center justify-center">
+              <Radio
+                className="h-8 w-8 text-red-400 animate-pulse transition-transform duration-700 ease-in-out group-hover:rotate-[360deg]"
+                strokeWidth={1.5}
+              />
+              <span className="absolute -top-1 -right-2.5 min-w-[18px] h-[18px] px-1 rounded-[5px] bg-[#1f1f1f] border border-white/20 text-white font-mono text-[11px] font-semibold flex items-center justify-center leading-none shadow-md">
                 {incidentCount}
               </span>
             </div>
-            <span className="mt-1.5 font-mono text-[10.5px] sm:text-[11px] uppercase tracking-wide text-white/70 group-hover:text-white transition-colors">
+            <span className="mt-2 font-mono text-[11px] uppercase tracking-wide text-white/70 group-hover:text-white transition-colors">
               Incidents
             </span>
           </button>
@@ -215,16 +212,14 @@ export default function LeftRail({
           {/* Tile 2: Recent Activity */}
           <button
             onClick={handleActivityClick}
-            className="group flex flex-col items-center text-center transition-transform active:scale-95"
+            className="group flex flex-col items-center justify-center text-center transition-transform active:scale-95 py-2 rounded-xl hover:bg-white/[0.02]"
           >
-            <div className="w-[75%] aspect-square rounded-xl sm:rounded-2xl border border-white/10 bg-white/[0.03] group-hover:border-white/25 group-hover:bg-white/[0.06] flex items-center justify-center transition-all p-1.5">
-              <AnimatedClock
-                className="w-[62%] h-[62%] text-green-400 opacity-70 group-hover:opacity-100 transition-opacity duration-200"
-                strokeWidth={1.5}
-                isSpinning={isActivitySpinning}
-              />
-            </div>
-            <span className="mt-1.5 font-mono text-[10.5px] sm:text-[11px] uppercase tracking-wide text-white/70 group-hover:text-white transition-colors">
+            <AnimatedClock
+              className="h-8 w-8 text-green-400 opacity-70 group-hover:opacity-100 transition-opacity duration-200"
+              strokeWidth={1.5}
+              isSpinning={isActivitySpinning}
+            />
+            <span className="mt-2 font-mono text-[11px] uppercase tracking-wide text-white/70 group-hover:text-white transition-colors">
               Activity
             </span>
           </button>
@@ -232,25 +227,17 @@ export default function LeftRail({
           {/* Tile 3: Settings */}
           <button
             onClick={handleSettingsClick}
-            className="group flex flex-col items-center text-center transition-transform active:scale-95"
+            className="group flex flex-col items-center justify-center text-center transition-transform active:scale-95 py-2 rounded-xl hover:bg-white/[0.02]"
           >
-            <div className={`w-[75%] aspect-square rounded-xl sm:rounded-2xl border transition-all shadow-[0_0_15px_rgba(34,197,94,0.06)] p-1.5 flex items-center justify-center ${
-              isSettingsActive
-                ? "border-green-400/50 bg-green-500/20"
-                : "border-green-500/25 bg-green-500/[0.08] group-hover:border-green-400/40 group-hover:bg-green-500/15"
-            }`}>
-              <Settings
-                className={`w-[62%] h-[62%] text-green-400 transition-all duration-300 ease-out ${
-                  isSettingsActive
-                    ? "rotate-90 opacity-100"
-                    : "opacity-60 group-hover:opacity-100 group-hover:rotate-45"
-                }`}
-                strokeWidth={1.5}
-              />
-            </div>
-            <span className={`mt-1.5 font-mono text-[10.5px] sm:text-[11px] uppercase tracking-wide transition-colors ${
-              isSettingsActive ? "text-green-200" : "text-green-300 group-hover:text-green-200"
-            }`}>
+            <Settings
+              className={`h-8 w-8 text-green-400 transition-all duration-300 ease-out ${
+                isSettingsRotated
+                  ? "rotate-90 opacity-100"
+                  : "opacity-60 group-hover:opacity-100 group-hover:rotate-45"
+              }`}
+              strokeWidth={1.5}
+            />
+            <span className="mt-2 font-mono text-[11px] uppercase tracking-wide text-green-300 group-hover:text-green-200 transition-colors">
               Settings
             </span>
           </button>
@@ -263,10 +250,10 @@ export default function LeftRail({
             className="group flex items-center justify-between rounded-lg px-3.5 py-2 text-xs font-mono uppercase font-medium text-white/70 hover:bg-white/5 hover:text-white border border-transparent transition-all"
           >
             <span className="flex items-center gap-2.5">
-              <Radio className="h-3.5 w-3.5 text-red-400 animate-pulse" />
+              <Radio className="h-3.5 w-3.5 text-red-400 animate-pulse transition-transform duration-700 ease-in-out group-hover:rotate-[360deg]" />
               All Incidents
             </span>
-            <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] text-white/80">
+            <span className="min-w-[18px] h-[18px] px-1.5 rounded-[5px] bg-[#1f1f1f] border border-white/20 font-mono text-[10.5px] text-white font-medium flex items-center justify-center">
               {incidentCount}
             </span>
           </button>
@@ -288,7 +275,7 @@ export default function LeftRail({
           <button
             onClick={handleSettingsClick}
             className={`group flex items-center justify-between rounded-lg px-3.5 py-2 text-xs font-mono uppercase font-medium border transition-all shadow-[0_0_12px_rgba(34,197,94,0.04)] ${
-              isSettingsActive
+              isSettingsSpinning
                 ? "text-green-200 bg-green-500/20 border-green-400/50"
                 : "text-green-300 bg-green-500/[0.07] border border-green-500/20 hover:bg-green-500/15 hover:border-green-400/35 hover:text-green-200"
             }`}
@@ -296,7 +283,7 @@ export default function LeftRail({
             <span className="flex items-center gap-2.5">
               <Settings
                 className={`h-3.5 w-3.5 text-green-400 transition-all duration-300 ease-out ${
-                  isSettingsActive
+                  isSettingsRotated
                     ? "rotate-90 opacity-100"
                     : "opacity-70 group-hover:opacity-100 group-hover:rotate-45"
                 }`}

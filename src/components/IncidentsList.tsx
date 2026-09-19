@@ -164,7 +164,7 @@ export default function IncidentsList({
       <section id="live-incidents-section" className="scroll-mt-28 w-full rounded-2xl overflow-hidden bg-black p-6 sm:p-8">
         <span className="inline-flex items-center gap-2 rounded-lg bg-red-500/15 px-3 py-1.5 text-xs text-red-400 ring-1 ring-red-500/25">
           <Radio className="h-3.5 w-3.5 text-red-400 animate-pulse" />
-          Live Monitoring
+          <span className="compact-hide">Live Monitoring</span>
         </span>
         <h2 className="mt-4 font-mono text-2xl font-bold uppercase leading-[1.15] tracking-tight text-white sm:text-3xl">
           Live Incidents
@@ -180,7 +180,7 @@ export default function IncidentsList({
         <div className="flex items-center gap-2.5">
           <span className="inline-flex items-center gap-2 rounded-lg bg-red-500/15 px-3 py-1.5 text-xs text-red-400 ring-1 ring-red-500/25">
             <Radio className="h-3.5 w-3.5 text-red-400 animate-pulse" />
-            Live Monitoring
+            <span className="compact-hide">Live Monitoring</span>
           </span>
           <button
             onClick={() => load(true)}

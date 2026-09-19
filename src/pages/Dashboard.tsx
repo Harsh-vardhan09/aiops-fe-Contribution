@@ -5,7 +5,7 @@ import IncidentsList from "../components/IncidentsList";
 import LeftRail, { type DashboardProject } from "../components/dashboard/LeftRail";
 import RightRail, { type ActivityItem } from "../components/dashboard/RightRail";
 import { getCachedData, setCachedData, isSessionRefreshed, markSessionRefetched } from "../lib/cache";
-import { Check, Bolt, Sparkles, Eye, EyeOff, Copy, ShieldCheck, KeyRound, Loader2, Folder, ChartNoAxesGantt, Settings2 } from "lucide-react";
+import { Check, Bolt, Sparkles, Eye, EyeOff, Copy, ShieldCheck, KeyRound, Loader2, Folder, PanelsTopLeft, Settings2 } from "lucide-react";
 
 export default function Dashboard({
   onGuideTextChange,
@@ -453,7 +453,7 @@ export default function Dashboard({
         <div className="flex items-center justify-between gap-3">
           <span className="inline-flex items-center gap-2 rounded-lg bg-green-400/15 px-3 py-1.5 text-xs text-green-300 ring-1 ring-green-400/25">
             <Bolt className="h-3.5 w-3.5 text-green-400" />
-            Project Setup
+            <span className="compact-hide">Project Setup</span>
           </span>
 
           {userEmail && (
@@ -637,7 +637,7 @@ export default function Dashboard({
               }`}
           >
             <Folder className="h-3 w-3" />
-            <span>Projects</span>
+            <span className="compact-hide">Projects</span>
           </button>
 
           <button
@@ -651,8 +651,8 @@ export default function Dashboard({
               : "text-white/40 hover:text-white/70 border border-transparent"
               }`}
           >
-            <ChartNoAxesGantt className="h-3 w-3" />
-            <span>Workspace</span>
+            <PanelsTopLeft className="h-3 w-3" />
+            <span className="compact-hide">Workspace</span>
           </button>
 
           <button
@@ -667,7 +667,7 @@ export default function Dashboard({
               }`}
           >
             <Settings2 className="h-3 w-3" />
-            <span>System</span>
+            <span className="compact-hide">System</span>
           </button>
         </div>
 
