@@ -6,7 +6,7 @@ import Landing from "./pages/Landing";
 import Navbar from "./components/Navbar";
 import SettingsModal from "./components/SettingsModal";
 import { applyCompactMode, loadSettings } from "./lib/settings";
-import { clearUserCache, resetSessionRefetchState } from "./lib/cache";
+import { clearUserCache, clearAllCache, resetSessionRefetchState } from "./lib/cache";
 
 type PageState = "landing" | "auth" | "dashboard";
 
@@ -21,6 +21,7 @@ export default function App() {
   const [isAuthClosing, setIsAuthClosing] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSettingsClosing, setIsSettingsClosing] = useState(false);
+  const [isDashboardExiting, setIsDashboardExiting] = useState(false);
   const navTimeoutRef = useRef<number | null>(null);
   const currentPageRef = useRef<PageState>("landing");
 
@@ -80,16 +81,10 @@ export default function App() {
     // Listen for auth changes
     let authListener: { subscription: { unsubscribe: () => void } } | null = null;
     try {
-      const response = supabase.auth.onAuthStateChange((event, newSession) => {
+      const response = supabase.auth.onAuthStateChange((_event, newSession) => {
         setSession(newSession);
 
         if (newSession) {
-          // On fresh sign in, clear old cache and reset session fetch state to guarantee sync
-          if (event === "SIGNED_IN") {
-            clearUserCache(newSession.user.id);
-            resetSessionRefetchState();
-          }
-
           if (currentPageRef.current === "auth") {
             setIsAuthClosing(true);
             setTimeout(() => {
@@ -102,9 +97,12 @@ export default function App() {
             localStorage.setItem("lastPage", "dashboard");
           }
         } else {
+          clearAllCache();
+          resetSessionRefetchState();
           setCurrentPage("landing");
           localStorage.setItem("lastPage", "landing");
           setIsSettingsOpen(false);
+          setIsSignOutMenuOpen(false);
         }
       });
       authListener = response.data;
@@ -135,6 +133,17 @@ export default function App() {
         setIsPillarPaused(false);
         navTimeoutRef.current = null;
       }, 150);
+    } else if (currentPage === "dashboard" && page !== "dashboard") {
+      // Smoothly animate bottom nav and dashboard out before switching
+      setIsDashboardExiting(true);
+      if (mode) setAuthMode(mode);
+
+      navTimeoutRef.current = window.setTimeout(() => {
+        setCurrentPage(page);
+        localStorage.setItem("lastPage", page);
+        setIsDashboardExiting(false);
+        navTimeoutRef.current = null;
+      }, 200);
     } else {
       setCurrentPage(page);
       if (mode) setAuthMode(mode);
@@ -160,14 +169,48 @@ export default function App() {
   };
 
   const handleLogout = async () => {
+    const currentUserId = session?.user?.id;
+
+    // 1. Instantly reset app state so UI immediately navigates to landing
+    setSession(null);
+    setIsSettingsOpen(false);
+    setIsSignOutMenuOpen(false);
+    setCurrentPage("landing");
+    localStorage.removeItem("lastPage");
+
+    // 2. Synchronously wipe all Supabase auth storage items and all application caches
     try {
-      await supabase.auth.signOut();
+      if (currentUserId) {
+        clearUserCache(currentUserId);
+      }
+      clearAllCache();
+      resetSessionRefetchState();
+
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (
+          key &&
+          (key.startsWith("sb-") ||
+            key.includes("supabase.auth") ||
+            key.startsWith("aiops_cache_"))
+        ) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
+      sessionStorage.clear();
+    } catch (e) {
+      console.warn("Storage cleanup error on logout:", e);
+    }
+
+    // 3. Dispatch sign out to Supabase client & server with local scope guarantee (safely caught for offline)
+    try {
+      await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+      await supabase.auth.signOut().catch(() => {});
     } catch (err) {
       console.warn("Supabase signOut error:", err);
     }
-    setSession(null);
-    setCurrentPage("landing");
-    localStorage.removeItem("lastPage");
   };
 
   if (loading) {
@@ -235,6 +278,7 @@ export default function App() {
                   isSettingsOpen={isSettingsOpen}
                   isSignOutMenuOpen={isSignOutMenuOpen}
                   isModalOpen={isModalOpen}
+                  isExiting={isDashboardExiting}
                   userEmail={session?.user?.email}
                 />
               </div>
