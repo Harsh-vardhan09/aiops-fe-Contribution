@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import LightPillar from "@/components/LightPillar";
+import { useState, useEffect, lazy, Suspense } from "react";
+const LightPillar = lazy(() => import("@/components/LightPillar"));
 import {
   Rocket,
   Brain,
@@ -114,6 +114,16 @@ export default function Landing({
 }) {
   const isDesktop = useIsDesktop();
   const displayedHeadline = useTypewriter(HEADLINE_TEXT, 32, 150);
+  const [pillarVisible, setPillarVisible] = useState(false);
+
+  useEffect(() => {
+    // Light pillar visible only after transition from dashboard animation finishes (~280ms)
+    const timer = setTimeout(() => {
+      setPillarVisible(true);
+    }, 280);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const handlePrimaryCta = () => {
     onDashboardClick?.();
@@ -164,24 +174,30 @@ export default function Landing({
           </div>
         </div>
 
-        <div className="hidden lg:block relative lg:w-[46%] overflow-hidden pointer-events-none [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]">
+        <div
+          className={`hidden lg:block relative lg:w-[46%] overflow-hidden pointer-events-none [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)] transition-opacity duration-1000 ease-out ${
+            pillarVisible ? "opacity-100" : "opacity-0"
+          }`}
+        >
           {isDesktop && (
-            <LightPillar
-              topColor="#27d036"
-              bottomColor="#d5bdd4"
-              intensity={0.9}
-              rotationSpeed={0.3}
-              glowAmount={0.0014}
-              pillarWidth={1.8}
-              pillarHeight={0.4}
-              noiseIntensity={0.4}
-              pillarRotation={25}
-              interactive={false}
-              mixBlendMode="screen"
-              quality="high"
-              paused={paused}
-              className="filter blur-[0.5px]"
-            />
+            <Suspense fallback={null}>
+              <LightPillar
+                topColor="#27d036"
+                bottomColor="#d5bdd4"
+                intensity={0.9}
+                rotationSpeed={0.3}
+                glowAmount={0.0014}
+                pillarWidth={1.8}
+                pillarHeight={0.4}
+                noiseIntensity={0.4}
+                pillarRotation={25}
+                interactive={false}
+                mixBlendMode="screen"
+                quality="high"
+                paused={paused || !pillarVisible}
+                className="filter blur-[0.5px]"
+              />
+            </Suspense>
           )}
           <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-black via-transparent to-transparent opacity-70" />
           <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-black/30 via-transparent to-black/30" />

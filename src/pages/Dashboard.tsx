@@ -4,26 +4,43 @@ import { supabase } from "../lib/supabase";
 import IncidentsList from "../components/IncidentsList";
 import LeftRail, { type DashboardProject } from "../components/dashboard/LeftRail";
 import RightRail, { type ActivityItem } from "../components/dashboard/RightRail";
-import { Check, Bolt, Sparkles, Eye, EyeOff, Copy, ShieldCheck, KeyRound, Loader2, FolderGit2, Radio, Activity } from "lucide-react";
+import { getCachedData, setCachedData, isSessionRefreshed, markSessionRefetched } from "../lib/cache";
+import { Check, Bolt, Sparkles, Eye, EyeOff, Copy, ShieldCheck, KeyRound, Loader2, Folder, ChartNoAxesGantt, Settings2 } from "lucide-react";
 
 export default function Dashboard({
   onGuideTextChange,
+  onOpenSettings,
+  isSettingsOpen = false,
+  userEmail: initialUserEmail,
 }: {
   onGuideTextChange?: (text: string | null) => void;
+  onOpenSettings?: () => void;
+  isSettingsOpen?: boolean;
+  userEmail?: string;
 } = {}) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [projectName, setProjectName] = useState("");
+  const [userEmail, setUserEmail] = useState<string>(initialUserEmail || "");
   const [isSyncing, setIsSyncing] = useState(true);
   const [isSyncFading, setIsSyncFading] = useState(false);
   const [creatingProject, setCreatingProject] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [showApiKey, setShowApiKey] = useState(false);
-  const [activeQuickAccess, setActiveQuickAccess] = useState("incidents");
   const [selectedProjectIdFilter, setSelectedProjectIdFilter] = useState<string | null>(null);
+  const [showAllChip, setShowAllChip] = useState(true);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
+
+  // Helper to sort projects newest first (created_at descending)
+  const sortProjectsNewestFirst = (list: Project[]): Project[] => {
+    return [...list].sort((a, b) => {
+      const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return timeB - timeA;
+    });
+  };
 
   // Mobile carousel slide state: 0 = Left Rail, 1 = Center Stage (default), 2 = Right Rail
   const [mobileSlide, setMobileSlide] = useState<number>(1);
@@ -56,32 +73,68 @@ export default function Dashboard({
     setActivities((prev) => [act, ...prev.slice(0, 8)]);
   }, []);
 
-  // Fetch projects and incidents directly from backend API (per authenticated user)
-  const loadData = useCallback(async () => {
+  // Fetch projects and incidents directly from backend API (per authenticated user) with offline caching
+  const loadData = useCallback(async (forceRefresh = false) => {
     try {
-      setIsSyncing(true);
-      setIsSyncFading(false);
       setError(null);
 
       const { data } = await supabase.auth.getSession();
-      if (!data.session) {
+      const sessionUser = data.session?.user;
+      const userId = sessionUser?.id;
+      const email = sessionUser?.email;
+      if (email) setUserEmail(email);
+
+      if (!data.session || !userId) {
         setError("User session not found. Please log in.");
         setIsSyncing(false);
         return;
       }
 
+      // If offline cache exists and this is not a fresh page reload (SPA route change), load instantly
+      const isReload = isSessionRefreshed();
+      if (!isReload && !forceRefresh) {
+        const cachedProjects = getCachedData<Project[]>(userId, "projects");
+        const cachedIncidents = getCachedData<Incident[]>(userId, "incidents");
+
+        if (cachedProjects && cachedIncidents) {
+          const sortedCachedProjects = sortProjectsNewestFirst(cachedProjects);
+          setProjects(sortedCachedProjects);
+          setIncidents(cachedIncidents);
+
+          if (sortedCachedProjects.length > 0) {
+            setActiveProject((current) => {
+              if (current) {
+                const found = sortedCachedProjects.find((p) => p.id === current.id);
+                if (found) return found;
+              }
+              return sortedCachedProjects[0];
+            });
+          } else {
+            setActiveProject(null);
+          }
+
+          setIsSyncing(false);
+          setIsSyncFading(false);
+          return;
+        }
+      }
+
+      setIsSyncing(true);
+      setIsSyncFading(false);
+
       // 1. Fetch user-scoped projects from backend
       const fetchedProjects = await fetchProjects();
-      setProjects(fetchedProjects || []);
+      const sortedProjects = sortProjectsNewestFirst(fetchedProjects || []);
+      setProjects(sortedProjects);
 
-      if (fetchedProjects && fetchedProjects.length > 0) {
+      if (sortedProjects && sortedProjects.length > 0) {
         // Keep current active project or default to first
         setActiveProject((current) => {
           if (current) {
-            const found = fetchedProjects.find((p) => p.id === current.id);
+            const found = sortedProjects.find((p) => p.id === current.id);
             if (found) return found;
           }
-          return fetchedProjects[0];
+          return sortedProjects[0];
         });
       } else {
         setActiveProject(null);
@@ -91,10 +144,15 @@ export default function Dashboard({
       const fetchedIncidents = await fetchIncidents();
       setIncidents(fetchedIncidents || []);
 
+      // Store in isolated user cache
+      setCachedData(userId, "projects", sortedProjects || []);
+      setCachedData(userId, "incidents", fetchedIncidents || []);
+      markSessionRefetched();
+
       addActivity({
         id: `act-${Date.now()}`,
         title: "Session Synchronized",
-        subtitle: `Loaded ${fetchedProjects.length} project(s) & ${fetchedIncidents.length} incident(s)`,
+        subtitle: `Loaded ${sortedProjects.length} project(s) & ${fetchedIncidents.length} incident(s)`,
         time: "Just now",
         type: "health",
       });
@@ -168,8 +226,10 @@ export default function Dashboard({
     setError(null);
     try {
       const created = await createProject(projectName.trim());
-      setProjects((prev) => [created, ...prev]);
+      setProjects((prev) => sortProjectsNewestFirst([created, ...prev]));
       setActiveProject(created);
+      setSelectedProjectIdFilter(created.id);
+      setShowAllChip(false);
       setProjectName("");
 
       addActivity({
@@ -203,8 +263,9 @@ export default function Dashboard({
     }, 100);
   };
 
-  // Convert Project to DashboardProject with computed incident counts & status
-  const dashboardProjects: DashboardProject[] = projects.map((p) => {
+  // Convert Project to DashboardProject with computed incident counts & status (sorted newest first)
+  const sortedProjects = sortProjectsNewestFirst(projects);
+  const dashboardProjects: DashboardProject[] = sortedProjects.map((p) => {
     const projectIncidents = incidents.filter((inc) => inc.project_id === p.id);
     const incCount = projectIncidents.length;
     const isDegraded = projectIncidents.some(
@@ -275,9 +336,8 @@ export default function Dashboard({
   if (isSyncing) {
     return (
       <div
-        className={`w-full flex min-h-[450px] items-center justify-center transition-all duration-200 ease-out ${
-          isSyncFading ? "opacity-0 scale-95 filter blur-xs" : "opacity-100 scale-100 filter blur-none"
-        }`}
+        className={`w-full flex min-h-[450px] items-center justify-center transition-all duration-200 ease-out ${isSyncFading ? "opacity-0 scale-95 filter blur-xs" : "opacity-100 scale-100 filter blur-none"
+          }`}
       >
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-7 w-7 animate-spin text-green-400" />
@@ -296,13 +356,13 @@ export default function Dashboard({
     const performScroll = () => {
       // Find all elements with this section ID
       const elements = Array.from(document.querySelectorAll<HTMLElement>(`[id="${sectionId}"]`));
-      
+
       // Select the element that is actually inside the active visible layout
       let targetEl: HTMLElement | null = null;
       for (const el of elements) {
         const isInsideDesktop = !!el.closest(".desktop-layout-container");
         const isInsideMobile = !!el.closest(".mobile-layout-container");
-        
+
         if (isDesktop && isInsideDesktop) {
           targetEl = el;
           break;
@@ -347,12 +407,13 @@ export default function Dashboard({
   const renderLeftRail = () => (
     <LeftRail
       projects={dashboardProjects}
-      activeProjectId={activeProject?.id || null}
+      activeProjectId={selectedProjectIdFilter}
       onSelectProject={(proj) => {
         cancelGuide();
         const matched = projects.find((p) => p.id === proj.id) || null;
         setActiveProject(matched);
         setSelectedProjectIdFilter(proj.id);
+        setShowAllChip(false);
         // On mobile, selecting a project takes you to the center view and scrolls to top!
         setMobileSlide(1);
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -365,20 +426,22 @@ export default function Dashboard({
         });
       }}
       onNewProjectClick={handleNewProjectClick}
-      activeQuickAccess={activeQuickAccess}
       onSelectQuickAccess={(key) => {
         cancelGuide();
-        setActiveQuickAccess(key);
         if (key === "projects") {
           handleNewProjectClick();
         } else if (key === "incidents") {
           setSelectedProjectIdFilter(null);
+          setShowAllChip(true);
           scrollToTargetSection("incidents");
         } else if (key === "activity") {
           scrollToTargetSection("activity");
+        } else if (key === "settings") {
+          onOpenSettings?.();
         }
       }}
       incidentCount={activeIncidentsCount}
+      isSettingsOpen={isSettingsOpen}
     />
   );
 
@@ -387,11 +450,20 @@ export default function Dashboard({
     <main className="w-full max-w-[920px] flex flex-col gap-6 shrink-1 min-w-0">
       {/* Create Project Section */}
       <section className="w-full rounded-2xl overflow-hidden bg-black p-5 sm:p-8 border border-white/10">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <span className="inline-flex items-center gap-2 rounded-lg bg-green-400/15 px-3 py-1.5 text-xs text-green-300 ring-1 ring-green-400/25">
             <Bolt className="h-3.5 w-3.5 text-green-400" />
             Project Setup
           </span>
+
+          {userEmail && (
+            <span
+              className="lg:hidden font-mono text-xs text-white/50 truncate max-w-[160px] sm:max-w-[240px]"
+              title={userEmail}
+            >
+              {userEmail}
+            </span>
+          )}
         </div>
 
         <h2 className="mt-4 font-mono text-2xl font-bold uppercase leading-[1.15] tracking-tight text-white sm:text-3xl">
@@ -442,7 +514,7 @@ export default function Dashboard({
                 API Credentials
               </h3>
               <span className="flex items-center gap-1 rounded bg-green-400/10 px-2 py-0.5 font-mono text-[10px] uppercase text-green-300 border border-green-400/20">
-                <KeyRound className="h-3 w-3" /> Encrypted
+                <KeyRound className="h-3 w-3" /> <span className="compact-hide">Encrypted</span>
               </span>
             </div>
 
@@ -469,11 +541,11 @@ export default function Dashboard({
                   >
                     {showApiKey ? (
                       <>
-                        <EyeOff className="h-3.5 w-3.5 text-white/60" /> Hide
+                        <EyeOff className="h-3.5 w-3.5 text-white/60" /> <span className="compact-hide">Hide</span>
                       </>
                     ) : (
                       <>
-                        <Eye className="h-3.5 w-3.5 text-white/60" /> Reveal
+                        <Eye className="h-3.5 w-3.5 text-white/60" /> <span className="compact-hide">Reveal</span>
                       </>
                     )}
                   </button>
@@ -481,14 +553,15 @@ export default function Dashboard({
                   <button
                     onClick={handleCopyApiKey}
                     className="inline-flex items-center gap-1 rounded-md border border-white/15 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                    title="Copy API Key"
                   >
                     {copyFeedback ? (
                       <>
-                        <Check className="h-3.5 w-3.5 text-green-400" /> Copied
+                        <Check className="h-3.5 w-3.5 text-green-400" /> <span className="compact-hide">Copied</span>
                       </>
                     ) : (
                       <>
-                        <Copy className="h-3.5 w-3.5 text-white/60" /> Copy Key
+                        <Copy className="h-3.5 w-3.5 text-white/60" /> <span className="compact-hide">Copy Key</span>
                       </>
                     )}
                   </button>
@@ -512,6 +585,7 @@ export default function Dashboard({
         activeProject={activeProject}
         selectedProjectId={selectedProjectIdFilter}
         onActivityAdd={addActivity}
+        showAllChip={showAllChip}
       />
     </main>
   );
@@ -557,13 +631,12 @@ export default function Dashboard({
               setMobileSlide(0);
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${
-              mobileSlide === 0
-                ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
-                : "text-white/40 hover:text-white/70 border border-transparent"
-            }`}
+            className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${mobileSlide === 0
+              ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
+              : "text-white/40 hover:text-white/70 border border-transparent"
+              }`}
           >
-            <FolderGit2 className="h-3 w-3" />
+            <Folder className="h-3 w-3" />
             <span>Projects</span>
           </button>
 
@@ -573,13 +646,12 @@ export default function Dashboard({
               setMobileSlide(1);
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${
-              mobileSlide === 1
-                ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
-                : "text-white/40 hover:text-white/70 border border-transparent"
-            }`}
+            className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${mobileSlide === 1
+              ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
+              : "text-white/40 hover:text-white/70 border border-transparent"
+              }`}
           >
-            <Radio className="h-3 w-3" />
+            <ChartNoAxesGantt className="h-3 w-3" />
             <span>Workspace</span>
           </button>
 
@@ -589,13 +661,12 @@ export default function Dashboard({
               setMobileSlide(2);
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${
-              mobileSlide === 2
-                ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
-                : "text-white/40 hover:text-white/70 border border-transparent"
-            }`}
+            className={`px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${mobileSlide === 2
+              ? "bg-green-400/20 text-green-300 border border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.15)] font-bold"
+              : "text-white/40 hover:text-white/70 border border-transparent"
+              }`}
           >
-            <Activity className="h-3 w-3" />
+            <Settings2 className="h-3 w-3" />
             <span>System</span>
           </button>
         </div>

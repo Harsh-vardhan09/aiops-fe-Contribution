@@ -12,11 +12,10 @@ import {
   Radio,
   Check,
   ShieldCheck,
-  Copy,
-  Terminal,
-  Sparkles,
   Clock,
   RefreshCw,
+  Bug,
+  CloudSync,
 } from "lucide-react";
 
 type Analysis = {
@@ -33,6 +32,7 @@ interface IncidentsListProps {
   onServicesCountChange?: (count: number) => void;
   onActivityAdd?: (activity: any) => void;
   selectedProjectId?: string | null;
+  showAllChip?: boolean;
 }
 
 export default function IncidentsList({
@@ -41,6 +41,7 @@ export default function IncidentsList({
   onServicesCountChange,
   onActivityAdd,
   selectedProjectId,
+  showAllChip = false,
 }: IncidentsListProps) {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +50,6 @@ export default function IncidentsList({
     Record<string, Analysis>
   >({});
   const [analyzingId, setAnalyzingId] = useState<string | null>(null);
-  const [copiedSnippet, setCopiedSnippet] = useState(false);
   const [simulating, setSimulating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -111,16 +111,6 @@ export default function IncidentsList({
     return "border-green-400/25 bg-green-400/10 text-green-300";
   };
 
-  const handleCopySnippet = () => {
-    const key = activeProject?.api_key || "YOUR_PROJECT_API_KEY";
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || "https://aiops-api.onrender.com";
-    const snippet = `curl -X POST ${backendUrl}/logs \\
-  -H "Content-Type: application/json" \\
-  -d '{"api_key": "${key}", "service": "payment-gateway", "level": "ERROR", "message": "Connection timeout on Stripe webhook"}'`;
-    navigator.clipboard.writeText(snippet);
-    setCopiedSnippet(true);
-    setTimeout(() => setCopiedSnippet(false), 2000);
-  };
 
   const handleSimulateLogEvent = async () => {
     if (!activeProject?.api_key) {
@@ -206,17 +196,25 @@ export default function IncidentsList({
           <button
             onClick={handleSimulateLogEvent}
             disabled={simulating}
+            title="Send Test Error"
             className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 font-mono text-xs text-white/80 transition-colors hover:border-green-400/30 hover:bg-green-400/10 hover:text-green-300 disabled:opacity-50"
           >
-            <Sparkles className="h-3.5 w-3.5 text-green-400" />
-            <span>{simulating ? "Ingesting..." : "Send Test Error"}</span>
+            <Bug className="h-3.5 w-3.5 text-green-400" />
+            <span className="compact-hide">{simulating ? "Ingesting..." : "Send Test Error"}</span>
           </button>
         )}
       </div>
 
-      <h2 className="mt-4 font-mono text-2xl font-bold uppercase leading-[1.15] tracking-tight text-white sm:text-3xl">
-        Live Incidents
-      </h2>
+      <div className="mt-4 flex items-center gap-3">
+        <h2 className="font-mono text-2xl font-bold uppercase leading-[1.15] tracking-tight text-white sm:text-3xl">
+          Live Incidents
+        </h2>
+        {showAllChip && (
+          <span className="animate-fade-swift inline-flex items-center rounded-md border border-green-400/30 bg-green-400/10 px-2.5 py-0.5 font-mono text-[11px] font-bold uppercase tracking-wider text-green-300 shadow-[0_0_10px_rgba(74,222,128,0.15)]">
+            ALL
+          </span>
+        )}
+      </div>
 
       {error && (
         <div className="mt-5 rounded-lg border border-red-400/25 bg-red-400/10 px-4 py-3 text-sm text-red-300">
@@ -249,7 +247,7 @@ export default function IncidentsList({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
               <div>
                 <span className="font-mono text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
-                  <Radio className="h-4 w-4 text-amber-400" /> Awaiting Telemetry Stream
+                  <CloudSync className="h-4 w-4 text-amber-400" /> Awaiting Telemetry Stream
                 </span>
                 <p className="text-xs text-white/50 mt-1">
                   Connect your microservices to stream error events into AI Ops.
@@ -297,36 +295,6 @@ export default function IncidentsList({
               </div>
             </div>
 
-            {/* Quickstart snippet with MASKED sensitive credentials */}
-            <div className="mt-5 rounded-lg border border-white/10 bg-black/60 p-3.5">
-              <div className="flex items-center justify-between text-[11px] text-white/50 mb-2">
-                <span className="font-mono uppercase tracking-wider flex items-center gap-1.5">
-                  <Terminal className="h-3.5 w-3.5 text-green-400" /> Ingest Event via cURL
-                </span>
-                <button
-                  onClick={handleCopySnippet}
-                  className="inline-flex items-center gap-1 font-mono uppercase text-[10px] text-white/70 hover:text-green-300 transition-colors"
-                >
-                  {copiedSnippet ? (
-                    <>
-                      <Check className="h-3 w-3 text-green-400" /> Copied Command
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-3 w-3" /> Copy Command
-                    </>
-                  )}
-                </button>
-              </div>
-              <pre className="overflow-x-auto text-[11px] text-green-400 font-mono leading-relaxed">
-{`curl -X POST https://aiops-api.onrender.com/logs \\
-  -H "Content-Type: application/json" \\
-  -d '{"api_key": "ops_••••••••••••••••••••••••••••••••", "service": "payment-gateway", "level": "ERROR", "message": "Connection timeout"}'`}
-              </pre>
-              <div className="mt-2 flex items-center justify-between text-[10px] text-white/40 font-mono">
-                <span>* API key is masked for security. Click Copy Command to copy with your token.</span>
-              </div>
-            </div>
           </div>
         )
       )}

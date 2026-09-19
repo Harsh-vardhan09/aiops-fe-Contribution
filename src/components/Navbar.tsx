@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import Logo from "./Logo";
-import { Home, User, LogOut } from "lucide-react";
+import { Home, User, LogOut, WifiOff } from "lucide-react";
 
 export default function Navbar({
   session,
@@ -26,9 +26,60 @@ export default function Navbar({
   guideOverlayText?: string | null;
 }) {
   const [logoutMenuOpen, setLogoutMenuOpen] = useState(false);
+  const [isOnline, setIsOnline] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return navigator.onLine;
+  });
+  const [showOfflineAlert, setShowOfflineAlert] = useState(false);
   const navRef = useRef<HTMLElement>(null);
 
   const isDashboard = currentPage === "dashboard";
+
+  // Online / Offline event listeners
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      setShowOfflineAlert(false);
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setShowOfflineAlert(true);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  // When offline, cycle alert: show for 3 seconds every 15 seconds
+  useEffect(() => {
+    if (isOnline) {
+      setShowOfflineAlert(false);
+      return;
+    }
+
+    // Initial 3s display
+    setShowOfflineAlert(true);
+    const initialHide = setTimeout(() => {
+      setShowOfflineAlert(false);
+    }, 3000);
+
+    const interval = setInterval(() => {
+      setShowOfflineAlert(true);
+      setTimeout(() => {
+        setShowOfflineAlert(false);
+      }, 3000);
+    }, 15000);
+
+    return () => {
+      clearTimeout(initialHide);
+      clearInterval(interval);
+    };
+  }, [isOnline]);
 
   const toggleMenu = () => {
     setLogoutMenuOpen((prev) => {
@@ -82,8 +133,12 @@ export default function Navbar({
   return (
     <nav
       ref={navRef}
-      className={`relative w-full navbar-blur-60 transition-[background-color,border-color,box-shadow,padding,border-radius] duration-300 ease-out will-change-[transform,backdrop-filter] ${
-        guideOverlayText
+      className={`relative w-full navbar-blur-60 transition-[background-color,border-color,box-shadow,padding,border-radius] duration-700 ease-in-out will-change-[transform,backdrop-filter] ${
+        !isOnline
+          ? isScrolled
+            ? "rounded-none border-b border-red-500/40 border-t-0 border-x-0 bg-red-950/40 px-4 py-4 shadow-[0_4px_25px_rgba(239,68,68,0.2)] sm:rounded-2xl sm:border sm:border-red-500/40 sm:px-6 sm:py-4"
+            : "rounded-2xl border border-red-500/40 bg-red-950/30 px-4 py-3 sm:px-6 shadow-[0_0_20px_rgba(239,68,68,0.18)]"
+          : guideOverlayText
           ? "rounded-2xl border border-white/20 bg-black px-4 py-3 sm:px-6 shadow-none"
           : isScrolled
           ? "rounded-none border-b border-white/20 border-t-0 border-x-0 bg-black/75 px-4 py-4 shadow-xl sm:rounded-2xl sm:border sm:border-white/20 sm:px-6 sm:py-4 sm:shadow-2xl"
@@ -103,19 +158,33 @@ export default function Navbar({
       </div>
 
       <div className="flex w-full flex-wrap items-center justify-between gap-3">
-        <button
-          type="button"
-          onClick={() => {
-            closeMenu();
-            if (onLogoClick) onLogoClick();
-            else if (onHomeClick) onHomeClick();
-            else window.scrollTo({ top: 0, behavior: "smooth" });
-          }}
-          className="flex items-center gap-2 text-white"
-        >
-          <Logo className="h-6 w-6 text-green-400" />
-          <span className="text-lg font-semibold tracking-tight">AI Ops</span>
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => {
+              closeMenu();
+              if (onLogoClick) onLogoClick();
+              else if (onHomeClick) onHomeClick();
+              else window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="flex items-center gap-2 text-white"
+          >
+            <Logo className="h-6 w-6 text-green-400" />
+            <span className="text-lg font-semibold tracking-tight">AI Ops</span>
+          </button>
+
+          {/* Offline indicator: Displays for 3s every 15s with smooth fade */}
+          <div
+            className={`inline-flex items-center gap-1.5 rounded-full border border-red-500/40 bg-red-500/15 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider text-red-300 transition-all duration-500 ease-in-out ${
+              !isOnline && showOfflineAlert
+                ? "opacity-100 scale-100 max-w-[130px]"
+                : "opacity-0 scale-95 pointer-events-none max-w-0 px-0 border-transparent overflow-hidden"
+            }`}
+          >
+            <WifiOff className="h-2.5 w-2.5 text-red-400 shrink-0" />
+            <span className="whitespace-nowrap">No Internet</span>
+          </div>
+        </div>
 
         <div className="flex items-center gap-3">
           {session ? (

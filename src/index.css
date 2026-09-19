@@ -124,6 +124,45 @@ input:disabled {
   animation: fadeOutSwift 0.22s ease-in forwards;
 }
 
+@keyframes spinCcw {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes spinCw {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rotate90Cw {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(90deg);
+  }
+}
+
+.animate-spin-ccw-once {
+  animation: spinCcw 0.55s cubic-bezier(0.16, 1, 0.3, 1) 1 forwards;
+}
+
+.animate-spin-cw-once {
+  animation: spinCw 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1 forwards;
+}
+
+.animate-rotate-90-cw {
+  animation: rotate90Cw 0.35s cubic-bezier(0.16, 1, 0.3, 1) 1 forwards;
+}
+
 .animate-scale-up {
   animation: scaleUpFade 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -167,4 +206,46 @@ input:disabled {
     backdrop-filter: blur(36px);
     -webkit-backdrop-filter: blur(36px);
   }
+}
+
+/* Compact Buttons Mode - Hides text labels on specific buttons and chips */
+.compact-mode .compact-hide {
+  display: none !important;
+}
+
+/* Custom Stepped Range Slider */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.6);
+  cursor: pointer;
+  border: 2px solid #000;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.6);
+  cursor: pointer;
+  border: 2px solid #000;
+  transition: transform 0.15s ease, background-color 0.15s ease;
 }
