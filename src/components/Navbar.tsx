@@ -96,7 +96,7 @@ export default function Navbar({
 
   // Close logout menu on click outside
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
       if (navRef.current && !navRef.current.contains(event.target as Node)) {
         closeMenu();
       }
@@ -104,9 +104,11 @@ export default function Navbar({
 
     if (logoutMenuOpen) {
       document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
     }
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
     };
   }, [logoutMenuOpen]);
 
@@ -279,11 +281,14 @@ export default function Navbar({
         <div className={`absolute top-[calc(100%+0.35rem)] z-50 animate-drop-down ${isScrolled ? "right-3 sm:right-0" : "right-0"}`}>
           <button
             type="button"
-            onClick={() => {
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
               closeMenu();
               onLogout?.();
             }}
-            className="group flex min-w-[6rem] items-center justify-center rounded-xl border border-white/20 bg-neutral-900 px-4 py-2 text-sm font-medium text-white shadow-2xl transition-all hover:border-white/30 hover:bg-neutral-900 hover:text-red-400"
+            className="group flex min-w-[6rem] items-center justify-center rounded-xl border border-white/20 bg-neutral-900 px-4 py-2 text-sm font-medium text-white shadow-2xl transition-all hover:border-white/30 hover:bg-neutral-900 hover:text-red-400 cursor-pointer select-none"
           >
             <span className="block group-hover:hidden">Sign Out?</span>
             <span className="hidden group-hover:block">Sign Out</span>

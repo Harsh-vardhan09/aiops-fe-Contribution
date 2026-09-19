@@ -159,6 +159,7 @@ input:disabled {
   animation: spinCw 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1 forwards;
 }
 
+
 .animate-rotate-90-cw {
   animation: rotate90Cw 0.35s cubic-bezier(0.16, 1, 0.3, 1) 1 forwards;
 }

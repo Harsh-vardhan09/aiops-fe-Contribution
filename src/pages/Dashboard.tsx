@@ -13,14 +13,17 @@ export default function Dashboard({
   isSettingsOpen = false,
   isSignOutMenuOpen = false,
   isModalOpen = false,
+  isExiting = false,
   userEmail: initialUserEmail,
 }: {
   onOpenSettings?: () => void;
   isSettingsOpen?: boolean;
   isSignOutMenuOpen?: boolean;
   isModalOpen?: boolean;
+  isExiting?: boolean;
   userEmail?: string;
 } = {}) {
+  const [isMounted, setIsMounted] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -35,6 +38,13 @@ export default function Dashboard({
   const [selectedProjectIdFilter, setSelectedProjectIdFilter] = useState<string | null>(null);
   const [showAllChip, setShowAllChip] = useState(true);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsMounted(true);
+    }, 40);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Helper to sort projects newest first (created_at descending)
   const sortProjectsNewestFirst = (list: Project[]): Project[] => {
@@ -70,72 +80,90 @@ export default function Dashboard({
         return;
       }
 
-      // If offline cache exists and this is not a fresh page reload (SPA route change), load instantly
-      const isReload = isSessionRefreshed();
-      if (!isReload && !forceRefresh) {
-        const cachedProjects = getCachedData<Project[]>(userId, "projects");
-        const cachedIncidents = getCachedData<Incident[]>(userId, "incidents");
+      // Store/refresh cached user details while session is active
+      if (email) {
+        setCachedData(userId, "user_profile", { id: userId, email });
+      }
 
-        if (cachedProjects && cachedIncidents) {
-          const sortedCachedProjects = sortProjectsNewestFirst(cachedProjects);
-          setProjects(sortedCachedProjects);
-          setIncidents(cachedIncidents);
+      // 1. Immediately read cached project details and incidents if present
+      const cachedProjects = getCachedData<Project[]>(userId, "projects");
+      const cachedIncidents = getCachedData<Incident[]>(userId, "incidents");
 
-          if (sortedCachedProjects.length > 0) {
-            setActiveProject((current) => {
-              if (current) {
-                const found = sortedCachedProjects.find((p) => p.id === current.id);
-                if (found) return found;
-              }
-              return sortedCachedProjects[0];
-            });
-          } else {
-            setActiveProject(null);
+      if (cachedProjects && cachedProjects.length > 0) {
+        const sortedCached = sortProjectsNewestFirst(cachedProjects);
+        setProjects(sortedCached);
+        setActiveProject((current) => {
+          if (current) {
+            const found = sortedCached.find((p) => p.id === current.id);
+            if (found) return found;
           }
+          return sortedCached[0];
+        });
+      }
 
-          setIsSyncing(false);
-          setIsSyncFading(false);
-          return;
-        }
+      if (cachedIncidents) {
+        setIncidents(cachedIncidents);
+      }
+
+      // If offline cache exists and this is an SPA navigation (not force refresh / reload), show immediately
+      const isReload = isSessionRefreshed();
+      if (!isReload && !forceRefresh && cachedProjects && cachedIncidents) {
+        setIsSyncing(false);
+        setIsSyncFading(false);
+        return;
       }
 
       setIsSyncing(true);
       setIsSyncFading(false);
 
-      // 1. Fetch user-scoped projects from backend
-      const fetchedProjects = await fetchProjects();
-      const sortedProjects = sortProjectsNewestFirst(fetchedProjects || []);
-      setProjects(sortedProjects);
+      // 2. Fetch user-scoped projects and incidents from backend
+      try {
+        const fetchedProjects = await fetchProjects();
+        const sortedProjects = sortProjectsNewestFirst(fetchedProjects || []);
+        setProjects(sortedProjects);
 
-      if (sortedProjects && sortedProjects.length > 0) {
-        // Keep current active project or default to first
-        setActiveProject((current) => {
-          if (current) {
-            const found = sortedProjects.find((p) => p.id === current.id);
-            if (found) return found;
-          }
-          return sortedProjects[0];
+        if (sortedProjects && sortedProjects.length > 0) {
+          setActiveProject((current) => {
+            if (current) {
+              const found = sortedProjects.find((p) => p.id === current.id);
+              if (found) return found;
+            }
+            return sortedProjects[0];
+          });
+        } else {
+          setActiveProject(null);
+        }
+
+        const fetchedIncidents = await fetchIncidents();
+        setIncidents(fetchedIncidents || []);
+
+        // Store in isolated user cache for offline availability
+        setCachedData(userId, "projects", sortedProjects || []);
+        setCachedData(userId, "incidents", fetchedIncidents || []);
+        markSessionRefetched();
+
+        addActivity({
+          id: `act-${Date.now()}`,
+          title: "Session Synchronized",
+          subtitle: `Loaded ${sortedProjects.length} project(s) & ${fetchedIncidents.length} incident(s)`,
+          time: "Just now",
+          type: "health",
         });
-      } else {
-        setActiveProject(null);
+      } catch (networkErr: any) {
+        console.warn("Backend fetch failed (likely offline):", networkErr);
+        if (cachedProjects || cachedIncidents) {
+          markSessionRefetched();
+          addActivity({
+            id: `act-${Date.now()}`,
+            title: "Offline Cache Active",
+            subtitle: `Displaying stored workspace & telemetry`,
+            time: "Just now",
+            type: "health",
+          });
+        } else {
+          setError(networkErr.message || "Failed to load projects from backend API");
+        }
       }
-
-      // 2. Fetch user-scoped incidents from backend
-      const fetchedIncidents = await fetchIncidents();
-      setIncidents(fetchedIncidents || []);
-
-      // Store in isolated user cache
-      setCachedData(userId, "projects", sortedProjects || []);
-      setCachedData(userId, "incidents", fetchedIncidents || []);
-      markSessionRefetched();
-
-      addActivity({
-        id: `act-${Date.now()}`,
-        title: "Session Synchronized",
-        subtitle: `Loaded ${sortedProjects.length} project(s) & ${fetchedIncidents.length} incident(s)`,
-        time: "Just now",
-        type: "health",
-      });
     } catch (err: any) {
       console.error("Failed to load dashboard data:", err);
       setError(err.message || "Failed to load projects from backend API");
@@ -162,7 +190,15 @@ export default function Dashboard({
     setError(null);
     try {
       const created = await createProject(projectName.trim());
-      setProjects((prev) => sortProjectsNewestFirst([created, ...prev]));
+      setProjects((prev) => {
+        const next = sortProjectsNewestFirst([created, ...prev]);
+        supabase.auth.getSession().then(({ data }) => {
+          if (data?.session?.user?.id) {
+            setCachedData(data.session.user.id, "projects", next);
+          }
+        });
+        return next;
+      });
       setActiveProject(created);
       setSelectedProjectIdFilter(created.id);
       setShowAllChip(false);
@@ -394,9 +430,13 @@ export default function Dashboard({
           <button
             onClick={handleCreateProject}
             disabled={creatingProject}
-            className="rounded-lg border bg-green-400 px-5 py-3 text-sm font-medium text-black transition-colors hover:bg-green-300 disabled:opacity-50 flex items-center justify-center gap-1.5"
+            className="rounded-lg border border-green-300 bg-green-400 px-5 py-3 text-sm font-medium text-black transition-colors hover:bg-green-300 disabled:opacity-50 flex items-center justify-center gap-1.5"
           >
-            <Sparkles className="h-4 w-4" />
+            {creatingProject ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4" />
+            )}
             {creatingProject ? "Creating..." : "Create"}
           </button>
         </div>
@@ -549,14 +589,14 @@ export default function Dashboard({
       {/* 3. Floating Bottom Nav Overlay (Portaled directly to document.body for true viewport anchoring) */}
       {typeof document !== "undefined" &&
         (() => {
-          const isBottomNavHidden = Boolean(isSettingsOpen || isModalOpen || isSignOutMenuOpen);
+          const isBottomNavHidden = Boolean(!isMounted || isExiting || isSettingsOpen || isModalOpen || isSignOutMenuOpen);
           return createPortal(
             <nav
               id="bottom-nav"
               aria-label="Mobile stage navigation"
               className={`fixed bottom-5 sm:bottom-6 left-0 right-0 z-40 flex justify-center pointer-events-none px-4 lg:hidden transition-all duration-300 ease-out ${
                 isBottomNavHidden
-                  ? "opacity-0 translate-y-12 scale-95 pointer-events-none"
+                  ? "opacity-0 translate-y-10 scale-95 pointer-events-none"
                   : "opacity-100 translate-y-0 scale-100"
               }`}
             >
