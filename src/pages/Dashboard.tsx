@@ -561,7 +561,7 @@ export default function Dashboard({
               }`}
             >
               <div
-                className={`pointer-events-auto bottom-nav-blur bg-black/70 border border-white/15 rounded-full p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.7)] flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider transition-all duration-300 ${
+                className={`pointer-events-auto backdrop-blur-2xl bottom-nav-blur bg-black/60 border border-white/20 rounded-full p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.6)] flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider transition-all duration-300 ${
                   isSignOutMenuOpen ? "page-blurred" : "page-unblurred"
                 }`}
               >
