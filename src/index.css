@@ -244,6 +244,10 @@ input:disabled {
   display: none !important;
 }
 
+.compact-mode .cache-slider-stops {
+  height: 0.65rem !important;
+}
+
 /* When Compact Mode is enabled: Place green create button inside the project name textbox */
 .compact-mode .create-input-container {
   position: relative;
@@ -367,6 +371,10 @@ input[type="range"] {
   background: rgba(255, 255, 255, 0.15);
   border-radius: 9999px;
   outline: none;
+  margin: 0;
+  padding: 0;
+  display: block;
+  width: 100%;
 }
 
 input[type="range"]::-webkit-slider-thumb {

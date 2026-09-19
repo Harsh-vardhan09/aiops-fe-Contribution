@@ -310,8 +310,8 @@ export default function SettingsModal({
                         />
                       </div>
 
-                      {/* Stepped stops o----o----o----o indicator labels */}
-                      <div className="mt-2.5 flex justify-between text-[10px] font-mono text-white/40 select-none">
+                      {/* Stepped stops o----o----o----o indicator labels exactly aligned under thumb stops */}
+                      <div className="relative h-8 cache-slider-stops mt-2 select-none w-full transition-[height] duration-200">
                         {CACHE_SIZE_STOPS.map((stop, idx) => (
                           <button
                             key={stop.label}
@@ -322,14 +322,17 @@ export default function SettingsModal({
                               saveSettings(next);
                               showFeedback();
                             }}
-                            className={`transition-colors flex flex-col items-center gap-0.5 ${
+                            style={{
+                              left: `calc(8px + (100% - 16px) * ${idx / (CACHE_SIZE_STOPS.length - 1)})`,
+                            }}
+                            className={`absolute top-0 -translate-x-1/2 transition-colors flex flex-col items-center gap-0.5 text-[10px] font-mono ${
                               idx === activeIndex
                                 ? "text-green-300 font-bold"
                                 : "text-white/40 hover:text-white/70"
                             }`}
                           >
-                            <span className="text-[9px]">•</span>
-                            <span>{stop.label}</span>
+                            <span className="text-[9px] leading-none">•</span>
+                            <span className="whitespace-nowrap compact-hide">{stop.label}</span>
                           </button>
                         ))}
                       </div>
