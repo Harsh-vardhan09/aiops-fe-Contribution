@@ -380,7 +380,7 @@ export default function Dashboard({
 
   // Center Main Workspace Component
   const renderCenterStage = () => (
-    <main className="w-full max-w-[920px] flex flex-col gap-6 shrink-1 min-w-0">
+    <main className="w-full max-w-[920px] flex flex-col gap-6 shrink-1 min-w-0 animate-dashboard-fade">
       {/* Create Project Section */}
       <section className="w-full rounded-2xl overflow-hidden bg-black p-5 sm:p-8 border border-white/10">
         <div className="flex items-center justify-between gap-3">
@@ -403,7 +403,7 @@ export default function Dashboard({
           Create Project
         </h2>
 
-        <p className="mt-2.5 max-w-xl text-xs sm:text-sm leading-relaxed text-white/50">
+        <p className="compact-hide mt-2.5 max-w-xl text-xs sm:text-sm leading-relaxed text-white/50">
           Spin up an isolated project to generate a secure write key and start streaming microservice logs into AI Ops.
         </p>
 
@@ -413,11 +413,11 @@ export default function Dashboard({
           </div>
         )}
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end">
-          <div className="flex-1">
-            <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.15em] text-white/50">
-              Project Name
-            </label>
+        <div className="mt-6 create-project-form">
+          <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.15em] text-white/50">
+            Project Name
+          </label>
+          <div className="create-input-container">
             <input
               ref={createInputRef}
               type="text"
@@ -425,21 +425,23 @@ export default function Dashboard({
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && handleCreateProject()}
-              className="w-full rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-sm transition-colors placeholder:text-white/30 focus:border-green-400/50 focus:bg-white/10 focus:outline-none"
+              className="create-project-input rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-sm transition-colors placeholder:text-white/30 focus:border-green-400/50 focus:bg-white/10 focus:outline-none"
             />
+            <button
+              onClick={handleCreateProject}
+              disabled={creatingProject}
+              className="create-project-btn rounded-lg border border-green-300 bg-green-400 px-5 py-3 text-sm font-medium text-black transition-colors hover:bg-green-300 disabled:opacity-50 flex items-center justify-center gap-1.5"
+            >
+              {creatingProject ? (
+                <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+              ) : (
+                <Sparkles className="h-4 w-4 shrink-0" />
+              )}
+              <span className="compact-hide">
+                {creatingProject ? "Creating..." : "Create"}
+              </span>
+            </button>
           </div>
-          <button
-            onClick={handleCreateProject}
-            disabled={creatingProject}
-            className="rounded-lg border border-green-300 bg-green-400 px-5 py-3 text-sm font-medium text-black transition-colors hover:bg-green-300 disabled:opacity-50 flex items-center justify-center gap-1.5"
-          >
-            {creatingProject ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Sparkles className="h-4 w-4" />
-            )}
-            {creatingProject ? "Creating..." : "Create"}
-          </button>
         </div>
 
         {/* SENSITIVE API Key Card with MASKING and Security Notice */}
@@ -509,7 +511,7 @@ export default function Dashboard({
                 {showApiKey ? activeProject.api_key : maskedKey}
               </div>
 
-              <p className="mt-2 text-[11px] leading-relaxed text-white/40">
+              <p className="compact-hide mt-2 text-[11px] leading-relaxed text-white/40">
                 Confidential write-only token. Never share your credential in public repositories.
               </p>
             </div>
@@ -544,6 +546,7 @@ export default function Dashboard({
     <div className="w-full flex flex-col gap-6 animate-dashboard-fade">
       {isSyncing ? (
         <div
+          key="sync-loading-screen"
           className={`w-full flex min-h-[450px] items-center justify-center transition-all duration-200 ease-out ${
             isSyncFading ? "opacity-0 scale-95 filter blur-xs" : "opacity-100 scale-100 filter blur-none"
           }`}
@@ -556,7 +559,7 @@ export default function Dashboard({
           </div>
         </div>
       ) : (
-        <>
+        <div key="dashboard-main-content" className="w-full flex flex-col gap-6 animate-dashboard-fade">
           {/* 1. Desktop 3-Column Layout (Hidden on Mobile) */}
           <div className="hidden lg:flex desktop-layout-container w-full flex-row justify-center items-start gap-6 xl:gap-8 mx-auto">
             {/* Left Rail: Navigation / Project Context */}
@@ -601,7 +604,7 @@ export default function Dashboard({
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
 
       {/* 3. Floating Bottom Nav Overlay (Portaled directly to document.body for true viewport anchoring) */}
@@ -677,7 +680,7 @@ export default function Dashboard({
 
       {/* Footer */}
       {!isSyncing && (
-        <footer className="mt-auto w-full py-6 text-center text-xs sm:text-sm text-white/40">
+        <footer className="mt-32 sm:mt-48 w-full py-8 text-center text-xs sm:text-sm text-white/40 border-t border-white/5">
           <p>&copy; 2026 AI Ops Copilot. End-to-end user isolation & bank-grade token encryption.</p>
         </footer>
       )}

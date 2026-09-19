@@ -249,7 +249,7 @@ export default function IncidentsList({
                 <span className="font-mono text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
                   <CloudSync className="h-4 w-4 text-amber-400" /> Awaiting Telemetry Stream
                 </span>
-                <p className="text-xs text-white/50 mt-1">
+                <p className="compact-hide text-xs text-white/50 mt-1">
                   Connect your microservices to stream error events into AI Ops.
                 </p>
               </div>
